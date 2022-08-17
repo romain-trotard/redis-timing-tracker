@@ -1,7 +1,7 @@
 import { SchemaFieldTypes } from 'redis';
-import { DURATION_TOPIC, TEST_MESSAGE_TYPE, FULL_TEST_MESSAGE_TYPE } from './constant.js';
+import { TIMING_TOPIC, TEST_MESSAGE_TYPE, FULL_TEST_MESSAGE_TYPE } from './constant.js';
 import newRedisClient from './newRedisClient.js';
-import { AllDurationMessage, TestDurationMessage } from './types';
+import { AllTimingMessage, TestTimingMessage } from './types';
 import 'dotenv/config';
 
 const JSON_PREFIX_KEY = 'runningTests';
@@ -46,15 +46,15 @@ async function run() {
     await createRedisSearchIndex(redisClient);
 
 
-    await subscribeClient.subscribe(DURATION_TOPIC, async stringMessage => {
-        const toto: AllDurationMessage = JSON.parse(stringMessage);
+    await subscribeClient.subscribe(TIMING_TOPIC, async stringMessage => {
+        const toto: AllTimingMessage = JSON.parse(stringMessage);
 
         switch (toto.type) {
             case FULL_TEST_MESSAGE_TYPE:
                 // TODO rtr implement this!!
                 break;
             case TEST_MESSAGE_TYPE:
-                const { duration, describeNames, name, hasError, startedAt } = toto as TestDurationMessage;
+                const { duration, describeNames, name, hasError, startedAt } = toto as TestTimingMessage;
 
                 // Do nothing for the moment if there is an error on the test
                 if (hasError) {

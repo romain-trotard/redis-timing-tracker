@@ -1,5 +1,5 @@
 /**
- * @jest-environment redis-timing-tracker/src/CustomNodeEnvironment
+ * @jest-environment redis-timing-tracker/src/CustomTimingNodeEnvironment
  */
 import { add, substract } from './index';
 

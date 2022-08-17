@@ -1,6 +1,6 @@
-import CustomNodeEnvironment from './CustomNodeEnvironment';
+import CustomTimingNodeEnvironment from './CustomTimingNodeEnvironment';
 
 export {
-    CustomNodeEnvironment,
+    CustomTimingNodeEnvironment,
 }
 

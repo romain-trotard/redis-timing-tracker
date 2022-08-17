@@ -1,13 +1,12 @@
 import { TestEnvironment as NodeEnvironment } from 'jest-environment-node';
-import { DURATION_TOPIC, FULL_TEST_MESSAGE_TYPE, TEST_MESSAGE_TYPE } from './constant.js';
+import { TIMING_TOPIC, FULL_TEST_MESSAGE_TYPE, TEST_MESSAGE_TYPE } from './constant.js';
 import newRedisClient from './newRedisClient.js';
 import 'dotenv/config';
 
 const client = newRedisClient();
-
 client.on('error', err => console.log('Redis Client Error', err));
 
-export default class CustomNodeEnvironment extends NodeEnvironment {
+export default class CustomTimingNodeEnvironment extends NodeEnvironment {
     constructor(config, context) {
         super(config, context);
         this.startTime = new Date();
@@ -23,7 +22,7 @@ export default class CustomNodeEnvironment extends NodeEnvironment {
         await super.teardown();
     }
 
-    async handleTestEvent(event, state) {
+    async handleTestEvent(event) {
         if (event.name === 'test_done') {
             const { test } = event;
             const { duration, name, errors, startedAt } = test;
@@ -37,10 +36,10 @@ export default class CustomNodeEnvironment extends NodeEnvironment {
 
             const message = { type: TEST_MESSAGE_TYPE, duration, describeNames, name, hasError: errors.length > 0, startedAt };
 
-            await client.publish(DURATION_TOPIC, JSON.stringify(message));
+            await client.publish(TIMING_TOPIC, JSON.stringify(message));
         } else if (event.name === 'teardown') {
             const message = { type: FULL_TEST_MESSAGE_TYPE, duration: new Date() - this.startTime, startedAt: this.startTime.getTime() };
-            await client.publish(DURATION_TOPIC, JSON.stringify(message));
+            await client.publish(TIMING_TOPIC, JSON.stringify(message));
         }
     }
 }

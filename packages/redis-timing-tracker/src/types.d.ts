@@ -1,25 +1,25 @@
 import { TEST_MESSAGE_TYPE, FULL_TEST_MESSAGE_TYPE } from './constant';
 
-export enum DurationMessageEnum {
-    TEST_DURATION_MESSAGE,
-    FULL_TEST_DURATION_MESSAGE,
+export enum TimingMessageEnum {
+    TEST_TIMING_MESSAGE,
+    FULL_TEST_TIMING_MESSAGE,
 }
 
-type DurationMessage<TDurationMessageType extends DurationMessageEnum> = {
+type TimingMessage<TTimingMessageType extends TimingMessageEnum> = {
     duration: number;
     startedAt: number;
 }
 
-export type TestDurationMessage = DurationMessage<DurationMessageEnum.TEST_DURATION_MESSAGE> & {
+export type TestTimingMessage = TimingMessage<TimingMessageEnum.TEST_DURATION_MESSAGE> & {
     type: TEST_MESSAGE_TYPE;
     name: string;
     describeNames: string[];
     hasError: boolean;
 }
 
-export type FullTestsDurationMessage = DurationMessage<DurationMessageEnum.FULL_TEST_DURATION_MESSAGE> & {
+export type FullTestsTimingMessage = TimingMessage<TimingMessageEnum.FULL_TEST_DURATION_MESSAGE> & {
     type: FULL_TEST_MESSAGE_TYPE;
 }
 
-export type AllDurationMessage = TestDurationMessage | FullTestsDurationMessage;
+export type AllTimingMessage = TestTimingMessage | FullTestsTimingMessage;
 

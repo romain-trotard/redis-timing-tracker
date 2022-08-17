@@ -1,7 +1,7 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
-import { Center, Flex, Heading, Input } from '@chakra-ui/react'
+import { Center, Flex, Heading } from '@chakra-ui/react'
 import { AsyncSelect, SingleValue } from 'chakra-react-select'
 import { useState } from 'react'
 
@@ -12,8 +12,8 @@ const Home: NextPage<{ data: { timestamp: number; value: number; }[]; testName: 
     const [chartData, setChartData] = useState(data);
     const [value, setValue] = useState<SingleValue<{ value: string; label: string; }>>(initValue);
 
-    const fetchDuration = async (testName: string): Promise<{ timestamp: number; value: number; }[]> => {
-        const url = new URL('http://localhost:3000/api/duration')
+    const fetchTimings = async (testName: string): Promise<{ timestamp: number; value: number; }[]> => {
+        const url = new URL('http://localhost:3000/api/timings')
         url.searchParams.append('testName', testName);
 
         const response = await fetch(url) 
@@ -36,12 +36,12 @@ const Home: NextPage<{ data: { timestamp: number; value: number; }[]; testName: 
                         onChange={v => {
                             setValue(v);
                             if (v?.value) {
-                                fetchDuration(v?.value).then(setChartData);
+                                fetchTimings(v?.value).then(setChartData);
                             }
                         }}
                         defaultOptions
                         loadOptions={(inputValue, callback) => {
-                            const url = new URL('http://localhost:3000/api/tests')
+                            const url = new URL('http://localhost:3000/api/testsNames')
                             url.searchParams.append('search', inputValue)
 
                             fetch(url).then(response => {
@@ -60,20 +60,20 @@ const Home: NextPage<{ data: { timestamp: number; value: number; }[]; testName: 
 }
 
 export async function getStaticProps() {
-    const testUrl = new URL('http://localhost:3000/api/tests')
+    const testUrl = new URL('http://localhost:3000/api/testsNames')
     testUrl.searchParams.append('search', '')
 
     const testsResponse = await fetch(testUrl);
     const testsNames = await testsResponse.json();
 
-    const fetchDuration = async (testName: string) => {
-        const url = new URL('http://localhost:3000/api/duration')
+    const fetchTimings = async (testName: string) => {
+        const url = new URL('http://localhost:3000/api/timings')
         url.searchParams.append('testName', testName);
         return await fetch(url)
     }
 
     const firstTestName = testsNames[0];
-    const response = await fetchDuration(firstTestName);
+    const response = await fetchTimings(firstTestName);
 
 
     if (!response.ok) {

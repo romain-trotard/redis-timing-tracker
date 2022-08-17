@@ -5,9 +5,7 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest .",
-    "test:watch": "jest --watch .",
-    "test:debug": "NODE_OPTIONS=--experimental-vm-modules node --inspect-brk node_modules/.bin/jest --runInBand ."
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest ."
   },
   "devDependencies": {
     "jest": "^28.1.3"
