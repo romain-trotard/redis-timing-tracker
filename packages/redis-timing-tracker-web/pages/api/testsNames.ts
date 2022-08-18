@@ -15,6 +15,8 @@ export default async function handler(
 
         const { total, documents } = await client.ft.search('idx:runningTests', !search ? '*' : `@searchName:${search}`, { LIMIT: { from: 0, size: 15 }});
 
+        console.log('Results', { total, search });
+
         let values: string[] = [];
         if (total > 0) {
             values = documents.map(({ value }) => value.searchName) as string[];

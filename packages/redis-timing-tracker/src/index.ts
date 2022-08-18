@@ -1,6 +1,4 @@
-import CustomTimingNodeEnvironment from './CustomTimingNodeEnvironment';
+import JestTimingReporter from './JestTimingReporter.js';
 
-export {
-    CustomTimingNodeEnvironment,
-}
+export default JestTimingReporter;
 

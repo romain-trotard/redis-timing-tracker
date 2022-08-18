@@ -19,6 +19,7 @@ export type TestTimingMessage = TimingMessage<TimingMessageEnum.TEST_DURATION_ME
 
 export type FullTestsTimingMessage = TimingMessage<TimingMessageEnum.FULL_TEST_DURATION_MESSAGE> & {
     type: FULL_TEST_MESSAGE_TYPE;
+    numberOfTests: number;
 }
 
 export type AllTimingMessage = TestTimingMessage | FullTestsTimingMessage;

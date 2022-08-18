@@ -1,14 +1,19 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
-import { Center, Flex, Heading } from '@chakra-ui/react'
+import { Box, Center, Container, Flex, Grid, GridItem, Heading, Text } from '@chakra-ui/react'
 import { AsyncSelect, SingleValue } from 'chakra-react-select'
 import { useState } from 'react'
 
 
 const Chart = dynamic(() => import('../components/Chart'), { ssr: false })
 
-const Home: NextPage<{ data: { timestamp: number; value: number; }[]; testName: string; initValue: { value: string; label: string; } }> = ({ data, testName, initValue, }) => {
+type TimeSeriesEntry = {
+    timestamp: number;
+    value: number;
+}
+
+const Home: NextPage<{ data: TimeSeriesEntry[]; fullTestData: TimeSeriesEntry[]; initValue: { value: string; label: string; }, latestRunInfo: { startedAt: number; duration: number; numberOfTests: number; } | null }> = ({ data, initValue, fullTestData, latestRunInfo }) => {
     const [chartData, setChartData] = useState(data);
     const [value, setValue] = useState<SingleValue<{ value: string; label: string; }>>(initValue);
 
@@ -16,7 +21,7 @@ const Home: NextPage<{ data: { timestamp: number; value: number; }[]; testName: 
         const url = new URL('http://localhost:3000/api/timings')
         url.searchParams.append('testName', testName);
 
-        const response = await fetch(url) 
+        const response = await fetch(url)
         return await response.json()
     }
 
@@ -29,8 +34,38 @@ const Home: NextPage<{ data: { timestamp: number; value: number; }[]; testName: 
             </Head>
 
             <main>
-                <Center as={Flex} flexDirection="column" gap={5}>
-                    <Heading as="h2">{testName}</Heading>
+                <Center as={Flex} flexDirection="column" gap={5} marginTop={5}>
+                    <Container maxW="container.lg" w="100%">
+                        <Grid templateColumns="repeat(3, 1fr)" gap={4}>
+                            <GridItem w="100%" >
+                                <Box h="100%" w="100%" borderWidth="1px" borderRadius="lg" padding={5}>
+                                    <Center as={Flex} flexDirection="column" gap={3} justifyItems="center" h="100%">
+                                        <Heading as="h3" textAlign="center">Last duration</Heading>
+                                        <Text fontSize="xl">{latestRunInfo === null ? 'N/A' : `${latestRunInfo.duration}ms`}</Text>
+                                    </Center>
+                                </Box>
+                            </GridItem>
+                            <GridItem w="100%" gap={4}>
+                                <Box h="100%" w="100%" borderWidth="1px" borderRadius="lg" padding={5}>
+                                    <Center as={Flex} flexDirection="column" gap={3} justifyItems="center" h="100%">
+                                        <Heading as="h3" textAlign="center">Number of tests</Heading>
+                                        <Text fontSize="xl">{latestRunInfo === null ? 'N/A' : latestRunInfo.numberOfTests}</Text>
+                                    </Center>
+                                </Box>
+                            </GridItem>
+                            <GridItem w="100%" gap={4}>
+                                <Box h="100%" w="100%" borderWidth="1px" borderRadius="lg" padding={5}>
+                                    <Center as={Flex} flexDirection="column" gap={3} justifyItems="center" h="100%">
+                                        <Heading as="h3" textAlign="center">Average time by test</Heading>
+                                        <Text fontSize="xl">{latestRunInfo === null ? 'N/A' : `${latestRunInfo.duration / latestRunInfo.numberOfTests}ms`}</Text>
+                                    </Center>
+                                </Box>
+                            </GridItem>
+                        </Grid>
+                    </Container>
+                    <Heading as="h2">Full tests timing</Heading>
+                    <Chart data={fullTestData} />
+                    <Heading as="h2">{value?.label ?? 'Select a test'}</Heading>
                     <AsyncSelect placeholder="Select a test"
                         value={value}
                         onChange={v => {
@@ -74,21 +109,23 @@ export async function getStaticProps() {
 
     const firstTestName = testsNames[0];
     const response = await fetchTimings(firstTestName);
-
-
-    if (!response.ok) {
-        throw new Error('Cannot get testData')
-    }
-
     const data = await response.json()
 
+    const fullTestResponse = await fetch('http://localhost:3000/api/test/full/timing');
+    const fullTestData = await fullTestResponse.json();
+
     const initValue = { value: firstTestName, label: firstTestName };
+
+    const latestRunResponse = await fetch('http://localhost:3000/api/test/full/latestRunInfo');
+    const latestRunInfo = await latestRunResponse.json();
 
     return {
         props: {
             data,
             testName: 'Sum should return right result',
             initValue,
+            fullTestData,
+            latestRunInfo,
         }
     }
 }
