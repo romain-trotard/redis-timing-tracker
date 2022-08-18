@@ -1,9 +1,11 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
-import { Box, Center, Container, Flex, Grid, GridItem, Heading, Text } from '@chakra-ui/react'
+import { Box, Center, Container, Flex, Grid, GridItem, Heading } from '@chakra-ui/react'
 import { AsyncSelect, SingleValue } from 'chakra-react-select'
 import { useState } from 'react'
+import Card from '../components/Card'
+import { ResponsiveContainer } from 'recharts'
 
 
 const Chart = dynamic(() => import('../components/Chart'), { ssr: false })
@@ -35,59 +37,52 @@ const Home: NextPage<{ data: TimeSeriesEntry[]; fullTestData: TimeSeriesEntry[];
 
             <main>
                 <Center as={Flex} flexDirection="column" gap={5} marginTop={5}>
-                    <Container maxW="container.lg" w="100%">
+                    <Container maxW="container.lg" w="100%" as={Flex} flexDirection="column" gap={5} alignItems="center">
                         <Grid templateColumns="repeat(3, 1fr)" gap={4}>
                             <GridItem w="100%" >
-                                <Box h="100%" w="100%" borderWidth="1px" borderRadius="lg" padding={5}>
-                                    <Center as={Flex} flexDirection="column" gap={3} justifyItems="center" h="100%">
-                                        <Heading as="h3" textAlign="center">Last duration</Heading>
-                                        <Text fontSize="xl">{latestRunInfo === null ? 'N/A' : `${latestRunInfo.duration}ms`}</Text>
-                                    </Center>
-                                </Box>
+                                <Card label="Last duration" value={latestRunInfo === null ? 'N/A' : `${latestRunInfo.duration}ms`} />
                             </GridItem>
                             <GridItem w="100%" gap={4}>
-                                <Box h="100%" w="100%" borderWidth="1px" borderRadius="lg" padding={5}>
-                                    <Center as={Flex} flexDirection="column" gap={3} justifyItems="center" h="100%">
-                                        <Heading as="h3" textAlign="center">Number of tests</Heading>
-                                        <Text fontSize="xl">{latestRunInfo === null ? 'N/A' : latestRunInfo.numberOfTests}</Text>
-                                    </Center>
-                                </Box>
+                                <Card label="Number of tests" value={latestRunInfo === null ? 'N/A' : latestRunInfo.numberOfTests} />
                             </GridItem>
                             <GridItem w="100%" gap={4}>
-                                <Box h="100%" w="100%" borderWidth="1px" borderRadius="lg" padding={5}>
-                                    <Center as={Flex} flexDirection="column" gap={3} justifyItems="center" h="100%">
-                                        <Heading as="h3" textAlign="center">Average time by test</Heading>
-                                        <Text fontSize="xl">{latestRunInfo === null ? 'N/A' : `${latestRunInfo.duration / latestRunInfo.numberOfTests}ms`}</Text>
-                                    </Center>
-                                </Box>
+                                <Card label="Average time by test" value={latestRunInfo === null ? 'N/A' : `${latestRunInfo.duration / latestRunInfo.numberOfTests}ms`} />
                             </GridItem>
                         </Grid>
-                    </Container>
-                    <Heading as="h2">Full tests timing</Heading>
-                    <Chart data={fullTestData} />
-                    <Heading as="h2">{value?.label ?? 'Select a test'}</Heading>
-                    <AsyncSelect placeholder="Select a test"
-                        value={value}
-                        onChange={v => {
-                            setValue(v);
-                            if (v?.value) {
-                                fetchTimings(v?.value).then(setChartData);
-                            }
-                        }}
-                        defaultOptions
-                        loadOptions={(inputValue, callback) => {
-                            const url = new URL('http://localhost:3000/api/testsNames')
-                            url.searchParams.append('search', inputValue)
+                        <Box h="100%" w="100%" borderWidth="1px" borderRadius="lg" padding={5} boxShadow="base">
+                            <Heading as="h2">Full tests timing</Heading>
+                            <ResponsiveContainer height={300}>
+                                <Chart data={fullTestData} />
+                            </ResponsiveContainer>
+                        </Box>
+                        <AsyncSelect placeholder="Select a test"
+                            value={value}
+                            onChange={v => {
+                                setValue(v);
+                                if (v?.value) {
+                                    fetchTimings(v?.value).then(setChartData);
+                                }
+                            }}
+                            defaultOptions
+                            loadOptions={(inputValue, callback) => {
+                                const url = new URL('http://localhost:3000/api/testsNames')
+                                url.searchParams.append('search', inputValue)
 
-                            fetch(url).then(response => {
-                                response.json().then(testsNames => {
-                                    callback(testsNames.map((value: string) => ({ value: value, label: value })));
-                                })
-                            });
-                        }}
-                        chakraStyles={{ container: (provided) => ({ ...provided, width: '500px' }) }}
-                    />
-                    <Chart data={chartData} />
+                                fetch(url).then(response => {
+                                    response.json().then(testsNames => {
+                                        callback(testsNames.map((value: string) => ({ value: value, label: value })));
+                                    })
+                                });
+                            }}
+                            chakraStyles={{ container: (provided) => ({ ...provided, width: '500px' }) }}
+                        />
+                        <Box h="100%" w="100%" borderWidth="1px" borderRadius="lg" padding={5} boxShadow="base">
+                            <Heading as="h2">{value?.label ?? 'Select a test'}</Heading>
+                            <ResponsiveContainer height={300}>
+                                <Chart data={chartData} />
+                            </ResponsiveContainer>
+                        </Box>
+                    </Container>
                 </Center>
             </main>
         </div>
