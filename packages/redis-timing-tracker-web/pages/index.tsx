@@ -2,8 +2,6 @@ import type { NextPage } from 'next'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
 import { Box, Center, Container, Flex, Grid, GridItem, Heading } from '@chakra-ui/react'
-import { AsyncSelect, SingleValue } from 'chakra-react-select'
-import { useState } from 'react'
 import Card from '../components/Card'
 import { ResponsiveContainer } from 'recharts'
 
@@ -15,18 +13,12 @@ type TimeSeriesEntry = {
     value: number;
 }
 
-const Home: NextPage<{ data: TimeSeriesEntry[]; fullTestData: TimeSeriesEntry[]; initValue: { value: string; label: string; }, latestRunInfo: { startedAt: number; duration: number; numberOfTests: number; } | null }> = ({ data, initValue, fullTestData, latestRunInfo }) => {
-    const [chartData, setChartData] = useState(data);
-    const [value, setValue] = useState<SingleValue<{ value: string; label: string; }>>(initValue);
+type Props = {
+    fullTestData: TimeSeriesEntry[];
+    latestRunInfo: { startedAt: number; duration: number; numberOfTests: number; } | null
+};
 
-    const fetchTimings = async (testName: string): Promise<{ timestamp: number; value: number; }[]> => {
-        const url = new URL('http://localhost:3000/api/timings')
-        url.searchParams.append('testName', testName);
-
-        const response = await fetch(url)
-        return await response.json()
-    }
-
+const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
     return (
         <div>
             <Head>
@@ -38,7 +30,7 @@ const Home: NextPage<{ data: TimeSeriesEntry[]; fullTestData: TimeSeriesEntry[];
             <main>
                 <Center as={Flex} flexDirection="column" gap={5} marginTop={5}>
                     <Container maxW="container.lg" w="100%" as={Flex} flexDirection="column" gap={5} alignItems="center">
-                        <Grid templateColumns="repeat(3, 1fr)" gap={4}>
+                        <Grid templateColumns="repeat(3, 1fr)" gap={4} width="100%">
                             <GridItem w="100%" >
                                 <Card label="Last duration" value={latestRunInfo === null ? 'N/A' : `${latestRunInfo.duration}ms`} />
                             </GridItem>
@@ -55,33 +47,6 @@ const Home: NextPage<{ data: TimeSeriesEntry[]; fullTestData: TimeSeriesEntry[];
                                 <Chart data={fullTestData} />
                             </ResponsiveContainer>
                         </Box>
-                        <AsyncSelect placeholder="Select a test"
-                            value={value}
-                            onChange={v => {
-                                setValue(v);
-                                if (v?.value) {
-                                    fetchTimings(v?.value).then(setChartData);
-                                }
-                            }}
-                            defaultOptions
-                            loadOptions={(inputValue, callback) => {
-                                const url = new URL('http://localhost:3000/api/testsNames')
-                                url.searchParams.append('search', inputValue)
-
-                                fetch(url).then(response => {
-                                    response.json().then(testsNames => {
-                                        callback(testsNames.map((value: string) => ({ value: value, label: value })));
-                                    })
-                                });
-                            }}
-                            chakraStyles={{ container: (provided) => ({ ...provided, width: '500px' }) }}
-                        />
-                        <Box h="100%" w="100%" borderWidth="1px" borderRadius="lg" padding={5} boxShadow="base">
-                            <Heading as="h2">{value?.label ?? 'Select a test'}</Heading>
-                            <ResponsiveContainer height={300}>
-                                <Chart data={chartData} />
-                            </ResponsiveContainer>
-                        </Box>
                     </Container>
                 </Center>
             </main>
@@ -93,32 +58,14 @@ export async function getStaticProps() {
     const testUrl = new URL('http://localhost:3000/api/testsNames')
     testUrl.searchParams.append('search', '')
 
-    const testsResponse = await fetch(testUrl);
-    const testsNames = await testsResponse.json();
-
-    const fetchTimings = async (testName: string) => {
-        const url = new URL('http://localhost:3000/api/timings')
-        url.searchParams.append('testName', testName);
-        return await fetch(url)
-    }
-
-    const firstTestName = testsNames[0];
-    const response = await fetchTimings(firstTestName);
-    const data = await response.json()
-
     const fullTestResponse = await fetch('http://localhost:3000/api/test/full/timing');
     const fullTestData = await fullTestResponse.json();
-
-    const initValue = { value: firstTestName, label: firstTestName };
 
     const latestRunResponse = await fetch('http://localhost:3000/api/test/full/latestRunInfo');
     const latestRunInfo = await latestRunResponse.json();
 
     return {
         props: {
-            data,
-            testName: 'Sum should return right result',
-            initValue,
             fullTestData,
             latestRunInfo,
         }

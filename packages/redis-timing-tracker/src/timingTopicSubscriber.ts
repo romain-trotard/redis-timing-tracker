@@ -37,15 +37,6 @@ async function createRedisTimeSeries(redisClient: ReturnType<typeof newRedisClie
     }
 }
 
-async function initializeFullTestJSON(redisClient: ReturnType<typeof newRedisClient>) {
-    const values = await redisClient.json.get(JSON_FULL_TEST_KEY);
-
-    // If values is null, we do not have initialize the value, so let's do it
-    if (values === null) {
-        await redisClient.json.set(JSON_FULL_TEST_KEY, '$', []);
-    }
-}
-
 async function createFullTestSearchIndex(redisClient: ReturnType<typeof newRedisClient>) {
     try {
         await redisClient.ft.create(

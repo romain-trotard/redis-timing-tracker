@@ -2,7 +2,6 @@ import { DateTime } from "luxon";
 import { CartesianGrid, Label, Line, LineChart, Tooltip, XAxis, YAxis } from "recharts";
 
 export default function Chart({ data, width, height }: { width?: number; height?: number; data: { timestamp: number; value: number; }[] }) {
-    console.log('The values are', { width, height });
     return (
         <LineChart data={data} margin={{ top: 50, left: 50 }} width={width} height={height}>
             <Tooltip labelFormatter={(value: number) => `Started : ${DateTime.fromMillis(value).toISO()}`}
