@@ -3,26 +3,38 @@ import newRedisClient from './newRedisClient.js';
 import { FULL_TEST_MESSAGE_TYPE, TEST_MESSAGE_TYPE, TIMING_TOPIC } from './constant.js';
 import 'dotenv/config';
 import { FullTestsTimingMessage, TestTimingMessage } from './types.js';
+import child_process from 'child_process';
+
+function getCurrentCommitSha() {
+    try {
+        return child_process.execSync('git rev-parse HEAD')
+            .toString().trim();
+    } catch (e) {
+        return undefined;
+    }
+}
 
 export default class JestTimingReporter {
     redisClient: ReturnType<typeof newRedisClient>;
+    commitSha: string | undefined;
 
     constructor() {
         this.redisClient = newRedisClient();
+        this.commitSha = getCurrentCommitSha();
     }
 
     async processSingleTest(test: AssertionResult, startedAt: number) {
         const { duration, title: name, failureMessages: errors, ancestorTitles: describeNames } = test;
 
         if (duration != null) {
-            const message: TestTimingMessage = { type: TEST_MESSAGE_TYPE, duration, describeNames, name, hasError: errors.length > 0, startedAt };
+            const message: TestTimingMessage = { type: TEST_MESSAGE_TYPE, duration, describeNames, name, hasError: errors.length > 0, startedAt, commitSha: this.commitSha };
 
             await this.redisClient.publish(TIMING_TOPIC, JSON.stringify(message));
         }
     }
 
     async processWholeTestResult(startedAt: number, endedAt: number, numberOfTests: number) {
-        const message: FullTestsTimingMessage = { type: FULL_TEST_MESSAGE_TYPE, duration: endedAt - startedAt, startedAt, numberOfTests };
+        const message: FullTestsTimingMessage = { type: FULL_TEST_MESSAGE_TYPE, duration: endedAt - startedAt, startedAt, numberOfTests, commitSha: this.commitSha };
 
         await this.redisClient.publish(TIMING_TOPIC, JSON.stringify(message));
     }

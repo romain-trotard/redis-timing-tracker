@@ -1,10 +1,12 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
-import { Box, Center, Container, Flex, Heading } from '@chakra-ui/react'
+import { Box, Center, Container, Flex, Grid, GridItem, Heading } from '@chakra-ui/react'
 import { AsyncSelect, SingleValue } from 'chakra-react-select'
 import { useState } from 'react'
 import { ResponsiveContainer } from 'recharts'
+import { start } from 'repl'
+import Card from '../../components/Card'
 
 
 const Chart = dynamic(() => import('../../components/Chart'), { ssr: false })
@@ -21,7 +23,8 @@ type Props = {
 
 const ByTestPage: NextPage<Props> = ({ data, initValue }) => {
     const [chartData, setChartData] = useState(data);
-    const [value, setValue] = useState<SingleValue<{ value: string; label: string; }>>(initValue);
+    const [value, setValue] = useState<NonNullable<SingleValue<{ value: string; label: string; }>>>(initValue);
+    const [info, setInfo] = useState<{ startedAt: number; commitSha: string | null; duration: number; }>();
 
     const fetchTimings = async (testName: string): Promise<{ timestamp: number; value: number; }[]> => {
         const url = new URL('http://localhost:3000/api/timings')
@@ -29,6 +32,17 @@ const ByTestPage: NextPage<Props> = ({ data, initValue }) => {
 
         const response = await fetch(url)
         return await response.json()
+    }
+
+    const getInfo = async (startedAt: string) => {
+        const url = new URL('http://localhost:3000/api/test/single/info')
+        url.searchParams.append('testName', value.value);
+        url.searchParams.append('startedAt', startedAt);
+
+        const response = await fetch(url);
+        const testInfo = await response.json();
+
+        setInfo(testInfo);
     }
 
     return (
@@ -45,9 +59,11 @@ const ByTestPage: NextPage<Props> = ({ data, initValue }) => {
                         <AsyncSelect placeholder="Select a test"
                             value={value}
                             onChange={v => {
-                                setValue(v);
-                                if (v?.value) {
-                                    fetchTimings(v?.value).then(setChartData);
+                                if (v !== null) {
+                                    setValue(v);
+                                    if (v?.value) {
+                                        fetchTimings(v?.value).then(setChartData);
+                                    }
                                 }
                             }}
                             defaultOptions
@@ -66,9 +82,22 @@ const ByTestPage: NextPage<Props> = ({ data, initValue }) => {
                         <Box h="100%" w="100%" borderWidth="1px" borderRadius="lg" padding={5} boxShadow="base">
                             <Heading as="h2">{value?.label ?? 'Select a test'}</Heading>
                             <ResponsiveContainer height={300}>
-                                <Chart data={chartData} />
+                                <Chart data={chartData} onValueClick={startedAt => getInfo(startedAt)}  />
                             </ResponsiveContainer>
                         </Box>
+                        {info && (
+                        <Grid templateColumns="repeat(3, 1fr)" gap={4} width="100%">
+                            <GridItem w="100%" >
+                                <Card label="Run at" value={info.startedAt} />
+                            </GridItem>
+                            <GridItem w="100%" gap={4}>
+                                <Card label="Duration" value={info.duration} />
+                            </GridItem>
+                            <GridItem w="100%" gap={4}>
+                                <Card label="Commit" value={info.commitSha} />
+                            </GridItem>
+                        </Grid>
+                        )}
                     </Container>
                 </Center>
             </main>

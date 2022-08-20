@@ -5,6 +5,7 @@ import { AllTimingMessage, FullTestsTimingMessage, TestTimingMessage } from './t
 import 'dotenv/config';
 
 const JSON_PREFIX_KEY = 'runningTests';
+const JSON_TEST_INFO_PREFIX_KEY = 'testRunInfo';
 const JSON_FULL_TEST_KEY = 'fullTests';
 
 async function createRedisSearchIndex(redisClient: ReturnType<typeof newRedisClient>) {
@@ -12,10 +13,10 @@ async function createRedisSearchIndex(redisClient: ReturnType<typeof newRedisCli
         await redisClient.ft.create(
             `idx:${JSON_PREFIX_KEY}`,
             {
-                '$.searchName': {
+                '$.concatTestName': {
                     type: SchemaFieldTypes.TEXT,
                     SORTABLE: true,
-                    AS: 'searchName'
+                    AS: 'concatTestName'
                 }
             },
             { ON: 'JSON', PREFIX: JSON_PREFIX_KEY }
@@ -44,27 +45,26 @@ async function createFullTestSearchIndex(redisClient: ReturnType<typeof newRedis
             // @ts-ignore
             `idx:${JSON_FULL_TEST_KEY}`,
             {
-                // '$.toto': {
-                //     type: SchemaFieldTypes.TEXT,
-                //     SORTABLE: true,
-                //     AS: 'searchName'
-                // },
-                // '$.startedAt': {
-                //     type: SchemaFieldTypes.NUMERIC,
-                // }
-                // startedAt: SchemaFieldTypes.NUMERIC,
                 '$.startedAt': {
                     type: SchemaFieldTypes.NUMERIC,
                     SORTABLE: true,
                     AS: 'startedAt',
                 }
             },
-            { ON: 'JSON', PREFIX: JSON_FULL_TEST_KEY}
+            { ON: 'JSON', PREFIX: JSON_FULL_TEST_KEY }
         );
     } catch (e: any) {
         if (e.message !== 'Index already exists') {
             throw e;
         }
+    }
+}
+
+async function createTestInfoByRunJson(redisClient: ReturnType<typeof newRedisClient>, key: string) {
+    const info = await redisClient.json.type(key);
+
+    if (info === null) {
+        await redisClient.json.set(key, '$', {});
     }
 }
 
@@ -86,7 +86,6 @@ async function run() {
                 const { duration, startedAt, numberOfTests } = message as FullTestsTimingMessage;
 
                 await Promise.all([
-                    // initializeFullTestJSON(redisClient),
                     createFullTestSearchIndex(redisClient),
                     createRedisTimeSeries(redisClient, FULL_TEST_TIME_SERIES_KEY),
                 ]);
@@ -94,15 +93,13 @@ async function run() {
 
                 await Promise.all([
                     redisClient.ts.add(FULL_TEST_TIME_SERIES_KEY, startedAt, duration),
-                    // Actually this is not what I have tot do!!
-                    // redisClient.json.arrAppend(JSON_FULL_TEST_KEY, '$', { startedAt, duration, numberOfTests }),
                     redisClient.json.set(`${JSON_FULL_TEST_KEY}:${startedAt}`, '$', { startedAt, duration, numberOfTests }),
                 ]);
 
                 break;
             }
             case TEST_MESSAGE_TYPE: {
-                const { duration, describeNames, name, hasError, startedAt } = message as TestTimingMessage;
+                const { duration, describeNames, name, hasError, startedAt, commitSha } = message as TestTimingMessage;
 
                 // Do nothing for the moment if there is an error on the test
                 if (hasError) {
@@ -110,13 +107,17 @@ async function run() {
                 }
 
                 // We concat the describe names with the test name
-                const searchName = [...describeNames, name].join(' ');
+                const concatTestName = [...describeNames, name].join(' ');
+                const testInfoKey = `${JSON_TEST_INFO_PREFIX_KEY}:${concatTestName}`;
 
-                await createRedisTimeSeries(redisClient, searchName);
+                await createRedisTimeSeries(redisClient, concatTestName);
+                await createTestInfoByRunJson(redisClient, testInfoKey);
 
                 await Promise.all([
-                    redisClient.ts.add(searchName, startedAt, duration),
-                    redisClient.json.set(`${JSON_PREFIX_KEY}:${searchName}`, '$', { describeNames, name, searchName, latestRunTimestamp: startedAt }),
+                    // The key is when the test has been started, because it's unique
+                    redisClient.json.set(testInfoKey, `$.${startedAt}`, { startedAt, commitSha: commitSha ?? null, duration }),
+                    redisClient.ts.add(concatTestName, startedAt, duration),
+                    redisClient.json.set(`${JSON_PREFIX_KEY}:${concatTestName}`, '$', { describeNames, name, searchName: concatTestName, latestRunTimestamp: startedAt }),
                 ]);
 
                 break;
