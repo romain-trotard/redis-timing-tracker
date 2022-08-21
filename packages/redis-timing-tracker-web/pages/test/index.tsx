@@ -1,12 +1,14 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
-import { Box, Center, Container, Flex, Grid, GridItem, Heading } from '@chakra-ui/react'
+import { Box, Center, Container, Flex, Grid, GridItem, Heading, Text } from '@chakra-ui/react'
 import { AsyncSelect, SingleValue } from 'chakra-react-select'
 import { useState } from 'react'
 import { ResponsiveContainer } from 'recharts'
 import { start } from 'repl'
 import Card from '../../components/Card'
+import { DateTime } from 'luxon'
+import { getDisplayDateTime } from '../../utils/date'
 
 
 const Chart = dynamic(() => import('../../components/Chart'), { ssr: false })
@@ -56,6 +58,8 @@ const ByTestPage: NextPage<Props> = ({ data, initValue }) => {
             <main>
                 <Center as={Flex} flexDirection="column" gap={5} marginTop={5}>
                     <Container maxW="container.lg" w="100%" as={Flex} flexDirection="column" gap={5} alignItems="center">
+                        <div>
+                        <Text as="label" fontSize="xl" fontWeight={700}>Test name</Text>
                         <AsyncSelect placeholder="Select a test"
                             value={value}
                             onChange={v => {
@@ -79,24 +83,25 @@ const ByTestPage: NextPage<Props> = ({ data, initValue }) => {
                             }}
                             chakraStyles={{ container: (provided) => ({ ...provided, width: '500px' }) }}
                         />
+                        </div>
                         <Box h="100%" w="100%" borderWidth="1px" borderRadius="lg" padding={5} boxShadow="base">
                             <Heading as="h2">{value?.label ?? 'Select a test'}</Heading>
                             <ResponsiveContainer height={300}>
-                                <Chart data={chartData} onValueClick={startedAt => getInfo(startedAt)}  />
+                                <Chart data={chartData} onValueClick={startedAt => getInfo(startedAt)} />
                             </ResponsiveContainer>
                         </Box>
                         {info && (
-                        <Grid templateColumns="repeat(3, 1fr)" gap={4} width="100%">
-                            <GridItem w="100%" >
-                                <Card label="Run at" value={info.startedAt} />
-                            </GridItem>
-                            <GridItem w="100%" gap={4}>
-                                <Card label="Duration" value={info.duration} />
-                            </GridItem>
-                            <GridItem w="100%" gap={4}>
-                                <Card label="Commit" value={info.commitSha} />
-                            </GridItem>
-                        </Grid>
+                            <Grid templateColumns="repeat(3, 1fr)" gap={4} width="100%">
+                                <GridItem w="100%" >
+                                    <Card label="Run at" value={getDisplayDateTime(info.startedAt)} />
+                                </GridItem>
+                                <GridItem w="100%" gap={4}>
+                                    <Card label="Duration" value={`${info.duration}ms`} />
+                                </GridItem>
+                                <GridItem w="100%" gap={4}>
+                                    <Card label="Commit" value={info.commitSha ?? 'N/A'} />
+                                </GridItem>
+                            </Grid>
                         )}
                     </Container>
                 </Center>

@@ -1,5 +1,5 @@
-import { DateTime } from "luxon";
 import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from "recharts";
+import { getDisplayDateTime } from "../utils/date";
 
 export default function Chart({ data, width, height, onValueClick }: { width?: number; height?: number; data: { timestamp: number; value: number; }[]; onValueClick?: (startedAt: string) => void; }) {
     return (
@@ -8,7 +8,7 @@ export default function Chart({ data, width, height, onValueClick }: { width?: n
                 onValueClick?.(activeLabel);
             }
         }}>
-            <Tooltip labelFormatter={(value: number) => `Started : ${DateTime.fromMillis(value).toISO()}`}
+            <Tooltip labelFormatter={(value: number) => `Started : ${getDisplayDateTime(value)}`}
                 formatter={(value: number) => [`${value}ms`, 'Duration:']} />
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="timestamp" label="Started at" tickFormatter={() => ''} />
