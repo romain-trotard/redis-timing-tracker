@@ -1,7 +1,7 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
-import { Box, Center, Container, Flex, Grid, GridItem, Heading, Text } from '@chakra-ui/react'
+import { Alert, AlertIcon, Box, Center, Container, Flex, Grid, GridItem, Heading, Text } from '@chakra-ui/react'
 import { AsyncSelect, SingleValue } from 'chakra-react-select'
 import { useState } from 'react'
 import { ResponsiveContainer } from 'recharts'
@@ -58,51 +58,56 @@ const ByTestPage: NextPage<Props> = ({ data, initValue }) => {
             <main>
                 <Center as={Flex} flexDirection="column" gap={5} marginTop={5}>
                     <Container maxW="container.lg" w="100%" as={Flex} flexDirection="column" gap={5} alignItems="center">
-                        <div>
-                        <Text as="label" fontSize="xl" fontWeight={700}>Test name</Text>
-                        <AsyncSelect placeholder="Select a test"
-                            value={value}
-                            onChange={v => {
-                                if (v !== null) {
-                                    setValue(v);
-                                    if (v?.value) {
-                                        fetchTimings(v?.value).then(setChartData);
+                        <Box width="100%">
+                            <Text as="label" fontSize="xl" fontWeight={700}>Test name</Text>
+                            <AsyncSelect placeholder="Select a test"
+                                value={value}
+                                onChange={v => {
+                                    if (v !== null) {
+                                        setValue(v);
+                                        if (v?.value) {
+                                            fetchTimings(v?.value).then(setChartData);
+                                        }
                                     }
-                                }
-                            }}
-                            defaultOptions
-                            loadOptions={(inputValue, callback) => {
-                                const url = new URL('http://localhost:3000/api/testsNames')
-                                url.searchParams.append('search', inputValue)
+                                }}
+                                defaultOptions
+                                loadOptions={(inputValue, callback) => {
+                                    const url = new URL('http://localhost:3000/api/testsNames')
+                                    url.searchParams.append('search', inputValue)
 
-                                fetch(url).then(response => {
-                                    response.json().then(testsNames => {
-                                        callback(testsNames.map((value: string) => ({ value: value, label: value })));
-                                    })
-                                });
-                            }}
-                            chakraStyles={{ container: (provided) => ({ ...provided, width: '500px' }) }}
-                        />
-                        </div>
+                                    fetch(url).then(response => {
+                                        response.json().then(testsNames => {
+                                            callback(testsNames.map((value: string) => ({ value: value, label: value })));
+                                        })
+                                    });
+                                }}
+                                chakraStyles={{ container: (provided) => ({ ...provided, width: '100%' }) }}
+                            />
+                        </Box>
                         <Box h="100%" w="100%" borderWidth="1px" borderRadius="lg" padding={5} boxShadow="base">
                             <Heading as="h2">{value?.label ?? 'Select a test'}</Heading>
                             <ResponsiveContainer height={300}>
                                 <Chart data={chartData} onValueClick={startedAt => getInfo(startedAt)} />
                             </ResponsiveContainer>
                         </Box>
-                        {info && (
-                            <Grid templateColumns="repeat(3, 1fr)" gap={4} width="100%">
-                                <GridItem w="100%" >
+                        {info ? (
+                            <Grid templateColumns={{ base: undefined, md: "repeat(3, 1fr)" }} gap={4} width="100%" gridAutoFlow="row">
+                                <GridItem w="100%">
                                     <Card label="Run at" value={getDisplayDateTime(info.startedAt)} />
                                 </GridItem>
                                 <GridItem w="100%" gap={4}>
                                     <Card label="Duration" value={`${info.duration}ms`} />
                                 </GridItem>
-                                <GridItem w="100%" gap={4}>
-                                    <Card label="Commit" value={info.commitSha ?? 'N/A'} />
+                                <GridItem w="100%" gap={4} whiteSpace="nowrap" overflow="hidden">
+                                    <Card label="Commit" value={info.commitSha ?? 'N/A'} ellipseValue />
                                 </GridItem>
                             </Grid>
-                        )}
+                        ) : (
+                            <Alert status="info">
+                                <AlertIcon />
+                                Click on a run to see more info
+                            </Alert>)
+                        }
                     </Container>
                 </Center>
             </main>

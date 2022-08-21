@@ -5,7 +5,10 @@ import Navigation from '../components/Navigation';
 
 function MyApp({ Component, pageProps }: AppProps) {
     return (<ChakraProvider>
-        <Flex>
+        <Flex flexDirection={{
+            base: 'column',
+            md: 'row',
+        }}>
             <Navigation />
             <main style={{ flex: 1 }}><Component {...pageProps} /></main>
         </Flex>
