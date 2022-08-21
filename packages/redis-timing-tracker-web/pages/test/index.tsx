@@ -99,7 +99,7 @@ const ByTestPage: NextPage<Props> = ({ data, initValue }) => {
                                     <Card label="Duration" value={`${info.duration}ms`} />
                                 </GridItem>
                                 <GridItem w="100%" gap={4} whiteSpace="nowrap" overflow="hidden">
-                                    <Card label="Commit" value={info.commitSha ?? 'N/A'} ellipseValue />
+                                    <Card label="Commit" value={info.commitSha ?? 'N/A'} ellipseValue copyable />
                                 </GridItem>
                             </Grid>
                         ) : (
