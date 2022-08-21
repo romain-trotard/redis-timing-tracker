@@ -8,7 +8,8 @@ function MyApp({ Component, pageProps }: AppProps) {
         <Flex flexDirection={{
             base: 'column',
             md: 'row',
-        }}>
+        }}
+            height="100%">
             <Navigation />
             <main style={{ flex: 1 }}><Component {...pageProps} /></main>
         </Flex>

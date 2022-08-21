@@ -30,14 +30,14 @@ const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
             <main>
                 <Center as={Flex} flexDirection="column" gap={5} marginTop={5}>
                     <Container maxW="container.lg" w="100%" as={Flex} flexDirection="column" gap={5} alignItems="center">
-                        <Grid templateColumns={{ base: undefined, md: "repeat(3, 1fr)" }} gap={4} width="100%" whiteSpace="nowrap">
-                            <GridItem w="100%" overflow="hidden" whiteSpace="nowrap">
+                        <Grid templateColumns={{ base: undefined, md: "repeat(3, 1fr)" }} gap={4} width="100%"> 
+                            <GridItem w="100%">
                                 <Card label="Last duration" value={latestRunInfo === null ? 'N/A' : `${latestRunInfo.duration}ms`} />
                             </GridItem>
-                            <GridItem w="100%" gap={4} overflow="hidden" whiteSpace="nowrap">
+                            <GridItem w="100%" gap={4}>
                                 <Card label="Number of tests" value={latestRunInfo === null ? 'N/A' : latestRunInfo.numberOfTests} />
                             </GridItem>
-                            <GridItem w="100%" gap={4} overflow="hidden" whiteSpace="nowrap">
+                            <GridItem w="100%" gap={4}>
                                 <Card label="Average time by test" value={latestRunInfo === null ? 'N/A' : `${latestRunInfo.duration / latestRunInfo.numberOfTests}ms`} />
                             </GridItem>
                         </Grid>
