@@ -11,7 +11,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         }}
             height="100%">
             <Navigation />
-            <main style={{ flex: 1 }}><Component {...pageProps} /></main>
+            <main style={{ flex: 1, paddingBottom: '15px' }}><Component {...pageProps} /></main>
         </Flex>
     </ChakraProvider>)
 }
