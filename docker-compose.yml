@@ -1,0 +1,8 @@
+version: '3.5'
+services:
+  redis-stack:
+    image: redis/redis-stack-server:7.0.2-RC1
+    ports:
+      - '6379:6379'
+    restart: always
+
