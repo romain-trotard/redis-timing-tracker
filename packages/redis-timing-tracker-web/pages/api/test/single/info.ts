@@ -15,15 +15,21 @@ export default async function handler(
         const client = newRedisClient();
         await client.connect();
 
-        const testInfoKey = `${JSON_TEST_INFO_PREFIX_KEY}:${testName}`;
-        // TODO rtr better typing
-        const infoResult: object[] | null = await client.json.get(testInfoKey, { path: `$.${startedAt}` }) as object[];
+        try {
 
-        const info = ( infoResult !== null && infoResult.length > 0) ? infoResult[0] : null;
+            const testInfoKey = `${JSON_TEST_INFO_PREFIX_KEY}:${testName}`;
+            // TODO rtr better typing
+            const infoResult: object[] | null = await client.json.get(testInfoKey, { path: `$.${startedAt}` }) as object[];
 
-        await client.disconnect();
+            const info = (infoResult !== null && infoResult.length > 0) ? infoResult[0] : null;
 
-        res.status(200).json(info);
+            res.status(200).json(info);
+        } catch (e) {
+            res.status(200).json(null);
+        } finally {
+            await client.disconnect();
+        }
+
     }
 }
 

@@ -11,14 +11,18 @@ export default async function handler(
         const { query: { testName } } = req;
         const testNameString = testName as string;
 
-        const client = newRedisClient(); 
+        const client = newRedisClient();
         await client.connect();
 
-        const { firstTimestamp, lastTimestamp } = await client.ts.info(testNameString);
-        const values = await client.ts.range(testNameString, firstTimestamp, lastTimestamp);
+        try {
+            const { firstTimestamp, lastTimestamp } = await client.ts.info(testNameString);
+            const values = await client.ts.range(testNameString, firstTimestamp, lastTimestamp);
 
-        await client.disconnect();
-
-        res.status(200).json(values)
+            res.status(200).json(values)
+        } catch (e) {
+            res.status(200).json(null);
+        } finally {
+            await client.disconnect();
+        }
     }
 }

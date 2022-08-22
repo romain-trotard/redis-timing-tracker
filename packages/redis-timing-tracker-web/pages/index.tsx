@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import { Box, Center, Container, Flex, Grid, GridItem, Heading } from '@chakra-ui/react'
 import Card from '../components/Card'
 import { ResponsiveContainer } from 'recharts'
+import EmptyState from '../components/EmptyState'
 
 
 const Chart = dynamic(() => import('../components/Chart'), { ssr: false })
@@ -13,12 +14,18 @@ type TimeSeriesEntry = {
     value: number;
 }
 
+type LatestRunInfo = { startedAt: number; duration: number; numberOfTests: number; };
+
 type Props = {
-    fullTestData: TimeSeriesEntry[];
-    latestRunInfo: { startedAt: number; duration: number; numberOfTests: number; } | null
+    fullTestData: TimeSeriesEntry[] | null;
+    latestRunInfo: LatestRunInfo | null
 };
 
 const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
+    if (latestRunInfo === null || fullTestData === null) {
+        return <EmptyState />
+    }
+
     return (
         <div>
             <Head>
@@ -27,29 +34,27 @@ const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
                 <link rel="icon" href="/favicon.ico" />
             </Head>
 
-            <main>
-                <Center as={Flex} flexDirection="column" gap={5} marginTop={5}>
-                    <Container maxW="container.lg" w="100%" as={Flex} flexDirection="column" gap={5} alignItems="center">
-                        <Grid templateColumns={{ base: undefined, md: "repeat(3, 1fr)" }} gap={4} width="100%"> 
-                            <GridItem w="100%">
-                                <Card label="Last duration" value={latestRunInfo === null ? 'N/A' : `${latestRunInfo.duration}ms`} />
-                            </GridItem>
-                            <GridItem w="100%" gap={4}>
-                                <Card label="Number of tests" value={latestRunInfo === null ? 'N/A' : latestRunInfo.numberOfTests} />
-                            </GridItem>
-                            <GridItem w="100%" gap={4}>
-                                <Card label="Average time by test" value={latestRunInfo === null ? 'N/A' : `${latestRunInfo.duration / latestRunInfo.numberOfTests}ms`} />
-                            </GridItem>
-                        </Grid>
-                        <Box h="100%" w="100%" borderWidth="1px" borderRadius="lg" padding={5} boxShadow="base">
-                            <Heading as="h2">Full tests timing</Heading>
-                            <ResponsiveContainer height={300}>
-                                <Chart data={fullTestData} />
-                            </ResponsiveContainer>
-                        </Box>
-                    </Container>
-                </Center>
-            </main>
+            <Center as={Flex} flexDirection="column" gap={5} marginTop={5}>
+                <Container maxW="container.lg" w="100%" as={Flex} flexDirection="column" gap={5} alignItems="center">
+                    <Grid templateColumns={{ base: undefined, md: "repeat(3, 1fr)" }} gap={4} width="100%">
+                        <GridItem w="100%">
+                            <Card label="Last duration" value={latestRunInfo === null ? 'N/A' : `${latestRunInfo.duration}ms`} />
+                        </GridItem>
+                        <GridItem w="100%" gap={4}>
+                            <Card label="Number of tests" value={latestRunInfo === null ? 'N/A' : latestRunInfo.numberOfTests} />
+                        </GridItem>
+                        <GridItem w="100%" gap={4}>
+                            <Card label="Average time by test" value={latestRunInfo === null ? 'N/A' : `${latestRunInfo.duration / latestRunInfo.numberOfTests}ms`} />
+                        </GridItem>
+                    </Grid>
+                    <Box h="100%" w="100%" borderWidth="1px" borderRadius="lg" padding={5} boxShadow="base">
+                        <Heading as="h2">Full tests timing</Heading>
+                        <ResponsiveContainer height={300}>
+                            <Chart data={fullTestData} />
+                        </ResponsiveContainer>
+                    </Box>
+                </Container>
+            </Center>
         </div>
     )
 }
@@ -60,6 +65,17 @@ export async function getStaticProps() {
 
     const fullTestResponse = await fetch('http://localhost:3000/api/test/full/timing');
     const fullTestData = await fullTestResponse.json();
+
+    // If no data from thid call, I know that I don't need to fetch anything else
+    if (fullTestData === null) {
+        return {
+            props: {
+                fullTestData: null,
+                latestRunInfo: null,
+            }
+        };
+    }
+
 
     const latestRunResponse = await fetch('http://localhost:3000/api/test/full/latestRunInfo');
     const latestRunInfo = await latestRunResponse.json();

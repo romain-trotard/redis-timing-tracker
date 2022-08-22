@@ -5,10 +5,9 @@ import { Alert, AlertIcon, Box, Center, Container, Flex, Grid, GridItem, Heading
 import { AsyncSelect, SingleValue } from 'chakra-react-select'
 import { useState } from 'react'
 import { ResponsiveContainer } from 'recharts'
-import { start } from 'repl'
 import Card from '../../components/Card'
-import { DateTime } from 'luxon'
 import { getDisplayDateTime } from '../../utils/date'
+import EmptyState from '../../components/EmptyState'
 
 
 const Chart = dynamic(() => import('../../components/Chart'), { ssr: false })
@@ -19,11 +18,19 @@ type TimeSeriesEntry = {
 }
 
 type Props = {
-    data: TimeSeriesEntry[];
-    initValue: { value: string; label: string; };
+    data: TimeSeriesEntry[] | null;
+    initValue: { value: string; label: string; } | null;
 };
 
 const ByTestPage: NextPage<Props> = ({ data, initValue }) => {
+    if (data === null || initValue === null) {
+        return <EmptyState />
+    }
+
+    return <Content data={data} initValue={initValue} />
+}
+
+const Content: NextPage<{ data: TimeSeriesEntry[]; initValue: { value: string; label: string; } }> = ({ data, initValue }) => {
     const [chartData, setChartData] = useState(data);
     const [value, setValue] = useState<NonNullable<SingleValue<{ value: string; label: string; }>>>(initValue);
     const [info, setInfo] = useState<{ startedAt: number; commitSha: string | null; duration: number; }>();
@@ -121,6 +128,15 @@ export async function getStaticProps() {
 
     const testsResponse = await fetch(testUrl);
     const testsNames = await testsResponse.json();
+
+    if (testsNames.length === 0) {
+        return {
+            props: {
+                data: null,
+                initValue: null,
+            }
+        }
+    }
 
     const fetchTimings = async (testName: string) => {
         const url = new URL('http://localhost:3000/api/timings')

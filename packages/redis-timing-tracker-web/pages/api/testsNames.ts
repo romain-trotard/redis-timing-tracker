@@ -10,20 +10,22 @@ export default async function handler(
     } else {
         const { query: { search } } = req;
 
-        const client = newRedisClient(); 
+        const client = newRedisClient();
         await client.connect();
 
-        const { total, documents } = await client.ft.search('idx:runningTests', !search ? '*' : `@searchName:${search}`, { LIMIT: { from: 0, size: 15 }});
+        try {
+            const { total, documents } = await client.ft.search('idx:runningTests', !search ? '*' : `@searchName:${search}`, { LIMIT: { from: 0, size: 15 } });
 
-        console.log('Results', { total, search });
+            let values: string[] = [];
+            if (total > 0) {
+                values = documents.map(({ value }) => value.searchName) as string[];
+            }
 
-        let values: string[] = [];
-        if (total > 0) {
-            values = documents.map(({ value }) => value.searchName) as string[];
+            res.status(200).json(values)
+        } catch (e) {
+            res.status(200).json([]);
+        } finally {
+            await client.disconnect();
         }
-
-        await client.disconnect();
-
-        res.status(200).json(values)
     }
 }
