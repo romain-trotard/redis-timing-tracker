@@ -16,13 +16,24 @@ Here is little achitecture diagram:
 
 ### How the data is stored:
 
-I have a project that publish the result timing of test to a topic named `timingTopic`. 2 types of event are sent:
-- Single test result, which is of the following type:
+Type structures are written with Typescript. 
+
+In this project I use 3 services of the Redis Stack:
+- Redis pub/sub
+- Redis JSON
+- Redis Search
+- Redis Time Series
+
+
+Before looking at how the data is stored. It's important to see how Redis pub/sub is used.
+Events are published and subscribed to a topic `timingTopic`. There are 2 types of events:
+
+- Event for each test result that ran with the type `singleTest`:
 
 ```ts
 type SingleTestTimingEvent = {
     // The type of the event
-    type: 'testType';
+    type: 'singleTest';
     // The name of the test
     name: string;
     // The potential parent describe names
@@ -38,12 +49,12 @@ type SingleTestTimingEvent = {
 }
 ```
 
-- The global timing result:
+- Event to summarize all tests run with the type `fullTest`:
 
 ```ts
 type FullTestTimingEvent = {
     // The type of the event
-    type: 'fullTestType';
+    type: 'fullTest';
     // The duration of running all tests
     duration: number;
     // The timstamp when the user launched tests
@@ -56,11 +67,16 @@ type FullTestTimingEvent = {
 ```
 
 
-A script is subscribed to this topic and persist data in redis with the following format:
+A script is subscribed to the `timingTopic` and persist data in redis.
 
-- For event of type `'testType'`:
+----
 
--- Keep tracking of information about a run with `json` with the following key: `testRunInfo:{uniqueTestName}` 
+Let's talk about each event separetely to see what is stored for each of them.
+
+
+1. Event `singleTest`
+
+- Keep tracking of information about a run with `json` with the following key: `testRunInfo:{uniqueTestName}` 
 
 ```bash
 JSON.SET testRunInfo:{uniqueTestName} $.{startedAt} {value}
@@ -79,7 +95,7 @@ type TestInfo = {
 }
 ```
 
--- Keep information about the last run, and track every test that has run:
+- Keep information about the last run, and track every test that has run:
 
 ```bash
 JSON.SET runningTests:{uniqueTestName} $ {value}
@@ -101,27 +117,27 @@ type RunningTest = {
 }
 ```
 
--- Make an index with the previous data (this will be usefull to search test by `uniqueTestName`):
+- Make an index with the previous data (this will be usefull to search test by `uniqueTestName`):
 
 ```bash
 FT.CREATE idx:runningTests ON JSON PREFIX runningTests SCHEMA $.uniqueTestName AS uniqueTestName TEXT SORTABLE
 ```
 
--- Store the duration in a time series:
+- Store the duration in a time series:
 
 ```bash
 TS.ADD {uniqueTestName} {startedAt} {duration}
 ```
 
-- For event of type `'fullTestType'`:
+2. Event `fullTest`
 
--- Store the duration in a time series:
+- Store the duration in a time series:
 
 ```bash
 TS.ADD fullTestTimeSeriesKey {startedAt} {duration}
 ```
 
--- Keep tracking of information about the run with `json` with the following key: `fullTests:{startedAt}` 
+- Keep tracking of information about the run with `json` with the following key: `fullTests:{startedAt}` 
 
 ```bash
 JSON.SET fullTests:{startedAt} $ {value}
@@ -146,7 +162,9 @@ type TestInfo = {
 
 ### How the data is accessed:
 
-Let's see how I access the data for the single test:
+Let's see how is accessed the data for each page of the application.
+
+1. Single test page
 
 - get test names from the search index:
 
@@ -175,10 +193,8 @@ TS.RANGE {uniqueTestName} {firstTimestamp} {lastTimestamp}
 JSON.GET testRunInfo:{uniqueTestName} $.{startedAt} 
 ```
 
-----
 
-We access to the data for the full tests in the following way:
-
+2. Full tests page
 
 - get the first and last timestamp (`firstTimestamp` and `lastTimestamp`):
 
@@ -205,6 +221,7 @@ JSON.GET fullTests $.{startedAt}
 ```bash
 FT.SEARCH idx:fullTests * LIMIT 0 1 SORTBY startedAt DESC
 ```
+
 
 ## How to run it locally?
 
