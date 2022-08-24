@@ -109,7 +109,6 @@ type RunningTest = {
     describeNames: string[];
     // The name of the test
     name: string;
-    // TODO rtr change this in the code
     // The unique test name, which the concatenation of describeNames and name
     uniqueTestName: string;
     // The timestamp of the latest run
@@ -146,10 +145,9 @@ JSON.SET fullTests:{startedAt} $ {value}
 The format of the value is:
 
 ```ts
-type TestInfo = {
+type FullTestInfo = {
     // The timstamp when the user launched tests
     startedAt: number;
-    // TODO rtr add this
     // The sha of the commit if we are in a git repository
     commitSha: string | null;
     // The duration of running all tests
@@ -213,7 +211,7 @@ TS.RANGE fullTestTimeSeriesKey {firstTimestamp} {lastTimestamp}
 - get information about a run:
 
 ```bash
-JSON.GET fullTests $.{startedAt} 
+JSON.GET fullTestRunInfo $.{startedAt} 
 ```
 
 - get information about last run:

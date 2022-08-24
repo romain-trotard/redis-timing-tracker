@@ -14,11 +14,11 @@ export default async function handler(
         await client.connect();
 
         try {
-            const { total, documents } = await client.ft.search('idx:runningTests', !search ? '*' : `@searchName:${search}`, { LIMIT: { from: 0, size: 15 } });
+            const { total, documents } = await client.ft.search('idx:runningTests', !search ? '*' : `@uniqueName:${search}`, { LIMIT: { from: 0, size: 15 } });
 
             let values: string[] = [];
             if (total > 0) {
-                values = documents.map(({ value }) => value.searchName) as string[];
+                values = documents.map(({ value }) => value.uniqueName) as string[];
             }
 
             res.status(200).json(values)

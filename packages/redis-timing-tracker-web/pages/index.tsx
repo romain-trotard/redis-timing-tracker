@@ -1,10 +1,12 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
-import { Box, Center, Container, Flex, Grid, GridItem, Heading } from '@chakra-ui/react'
+import { Alert, AlertIcon, Box, Center, Container, Flex, Grid, GridItem, Heading } from '@chakra-ui/react'
 import Card from '../components/Card'
 import { ResponsiveContainer } from 'recharts'
 import EmptyState from '../components/EmptyState'
+import { useState } from 'react'
+import { getDisplayDateTime } from '../utils/date'
 
 
 const Chart = dynamic(() => import('../components/Chart'), { ssr: false })
@@ -22,6 +24,18 @@ type Props = {
 };
 
 const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
+    const [info, setInfo] = useState<{ startedAt: number; commitSha: string | null; duration: number; }>();
+
+    const getInfo = async (startedAt: string) => {
+        const url = new URL('http://localhost:3000/api/test/single/info')
+        url.searchParams.append('startedAt', startedAt);
+
+        const response = await fetch(url);
+        const testInfo = await response.json();
+
+        setInfo(testInfo);
+    }
+
     if (latestRunInfo === null || fullTestData === null) {
         return <EmptyState />
     }
@@ -50,9 +64,27 @@ const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
                     <Box h="100%" w="100%" borderWidth="1px" borderRadius="lg" padding={5} boxShadow="base">
                         <Heading as="h2">Full tests timing</Heading>
                         <ResponsiveContainer height={300}>
-                            <Chart data={fullTestData} />
+                            <Chart data={fullTestData} onValueClick={startedAt => getInfo(startedAt)} />
                         </ResponsiveContainer>
                     </Box>
+                    {info ? (
+                        <Grid templateColumns={{ base: undefined, md: "repeat(3, 1fr)" }} gap={4} width="100%" gridAutoFlow="row">
+                            <GridItem w="100%">
+                                <Card label="Run at" value={getDisplayDateTime(info.startedAt)} />
+                            </GridItem>
+                            <GridItem w="100%" gap={4}>
+                                <Card label="Duration" value={`${info.duration}ms`} />
+                            </GridItem>
+                            <GridItem w="100%" gap={4} whiteSpace="nowrap" overflow="hidden">
+                                <Card label="Commit" value={info.commitSha ?? 'N/A'} ellipseValue copyable />
+                            </GridItem>
+                        </Grid>
+                    ) : (
+                        <Alert status="info">
+                            <AlertIcon />
+                            Click on a run to see more info
+                        </Alert>)
+                    }
                 </Container>
             </Center>
         </div>
