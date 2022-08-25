@@ -1,11 +1,11 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
-import { Alert, AlertIcon, Box, Center, Container, Flex, Grid, GridItem, Heading } from '@chakra-ui/react'
+import { Alert, AlertIcon, Box, Button, ButtonGroup, Center, Container, Flex, Grid, GridItem, Heading, Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverFooter, PopoverHeader, PopoverTrigger, Tooltip } from '@chakra-ui/react'
 import Card from '../components/Card'
 import { ResponsiveContainer } from 'recharts'
 import EmptyState from '../components/EmptyState'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { getDisplayDateTime } from '../utils/date'
 
 
@@ -25,6 +25,12 @@ type Props = {
 
 const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
     const [info, setInfo] = useState<{ startedAt: number; commitSha: string | null; duration: number; }>();
+    const [data, setData] = useState(fullTestData ?? []);
+    const initialFocusRef = useRef<HTMLButtonElement | null>(null);
+
+    if (latestRunInfo === null || fullTestData === null) {
+        return <EmptyState />
+    }
 
     const getInfo = async (startedAt: string) => {
         const url = new URL('http://localhost:3000/api/test/full/info')
@@ -36,8 +42,11 @@ const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
         setInfo(testInfo);
     }
 
-    if (latestRunInfo === null || fullTestData === null) {
-        return <EmptyState />
+    const deleteValue = async (timestamp: number) => {
+        const url = new URL('http://localhost:3000/api/test/full/timing')
+        url.searchParams.append('timestamp', timestamp.toString());
+
+        await fetch(url, { method: 'DELETE' });
     }
 
     return (
@@ -64,21 +73,64 @@ const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
                     <Box h="100%" w="100%" borderWidth="1px" borderRadius="lg" padding={5} boxShadow="base">
                         <Heading as="h2">Full tests timing</Heading>
                         <ResponsiveContainer height={300}>
-                            <Chart data={fullTestData} onValueClick={startedAt => getInfo(startedAt)} />
+                            <Chart data={data} onValueClick={startedAt => getInfo(startedAt)} />
                         </ResponsiveContainer>
                     </Box>
                     {info ? (
-                        <Grid templateColumns={{ base: undefined, md: "repeat(3, 1fr)" }} gap={4} width="100%" gridAutoFlow="row">
-                            <GridItem w="100%">
-                                <Card label="Run at" value={getDisplayDateTime(info.startedAt)} />
-                            </GridItem>
-                            <GridItem w="100%" gap={4}>
-                                <Card label="Duration" value={`${info.duration}ms`} />
-                            </GridItem>
-                            <GridItem w="100%" gap={4} whiteSpace="nowrap" overflow="hidden">
-                                <Card label="Commit" value={info.commitSha ?? 'N/A'} ellipseValue copyable />
-                            </GridItem>
-                        </Grid>
+                        <Flex flexDirection="column" gap={4}>
+                            <Grid templateColumns={{ base: undefined, md: "repeat(3, 1fr)" }} gap={4} width="100%" gridAutoFlow="row">
+                                <GridItem w="100%">
+                                    <Card label="Run at" value={getDisplayDateTime(info.startedAt)} />
+                                </GridItem>
+                                <GridItem w="100%" gap={4}>
+                                    <Card label="Duration" value={`${info.duration}ms`} />
+                                </GridItem>
+                                <GridItem w="100%" gap={4} whiteSpace="nowrap" overflow="hidden">
+                                    <Card label="Commit" value={info.commitSha ?? 'N/A'} ellipseValue copyable />
+                                </GridItem>
+                            </Grid>
+                            <Flex justifyContent="flex-end" flexWrap="wrap" gap={4}>
+                                <Tooltip label="Delete temporarily the point to see better the graph">
+                                    <Button variant="outline" colorScheme="red" onClick={() => {
+                                        setData(data.filter(v => v.timestamp !== info.startedAt));
+                                        setInfo(undefined);
+                                    }}>Delete from current chart</Button>
+                                </Tooltip>
+                                <Popover initialFocusRef={initialFocusRef} placement="top" closeOnBlur>
+                                    <PopoverTrigger>
+                                        <Button colorScheme="red">Delete definitely the point</Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent color='white' bg='blue.800' borderColor='blue.800'>
+                                        <PopoverHeader pt={4} fontWeight='bold' border='0'>
+                                            Delete the point forever
+                                        </PopoverHeader>
+                                        <PopoverArrow />
+                                        <PopoverCloseButton />
+                                        <PopoverBody>
+                                            Do you really want to delete the data definitely?
+                                        </PopoverBody>
+                                        <PopoverFooter
+                                            border='0'
+                                            display='flex'
+                                            alignItems='center'
+                                            justifyContent='flex-end'
+                                            pb={4}
+                                        >
+                                            <ButtonGroup size='sm'>
+                                                <Button colorScheme='red' ref={initialFocusRef} onClick={async () => {
+                                                    await deleteValue(info.startedAt);
+
+                                                    setData(data.filter(v => v.timestamp !== info.startedAt));
+                                                    setInfo(undefined);
+                                                }}>
+                                                    Delete
+                                                </Button>
+                                            </ButtonGroup>
+                                        </PopoverFooter>
+                                    </PopoverContent>
+                                </Popover>
+                            </Flex>
+                        </Flex>
                     ) : (
                         <Alert status="info">
                             <AlertIcon />

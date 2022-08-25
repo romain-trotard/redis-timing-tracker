@@ -3,7 +3,9 @@ import { getDisplayDateTime } from "../utils/date";
 
 export default function Chart({ data, width, height, onValueClick }: { width?: number; height?: number; data: { timestamp: number; value: number; }[]; onValueClick?: (startedAt: string) => void; }) {
     return (
-        <LineChart data={data} margin={{ top: 50, left: 50 }} width={width} height={height} onClick={({ activeLabel }) => {
+        <LineChart data={data} margin={{ top: 50, left: 50 }} width={width} height={height} onClick={(point) => {
+            const activeLabel = point?.activeLabel;
+
             if (activeLabel !== undefined) {
                 onValueClick?.(activeLabel);
             }
