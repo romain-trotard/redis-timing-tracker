@@ -15,6 +15,7 @@
     "@emotion/styled": "^11.10.0",
     "chakra-react-select": "^4.1.4",
     "dotenv": "^16.0.1",
+    "find-yarn-workspace-root": "^2.0.0",
     "framer-motion": "^7.1.0",
     "luxon": "^3.0.1",
     "next": "12.2.4",

@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "dotenv": "^16.0.1",
+    "find-yarn-workspace-root": "^2.0.0",
     "redis": "^4.2.0"
   }
 }

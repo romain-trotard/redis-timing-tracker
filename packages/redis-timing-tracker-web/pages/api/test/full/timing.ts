@@ -13,6 +13,7 @@ export default async function handler(
 
         try {
             const { firstTimestamp, lastTimestamp } = await client.ts.info('fullTestTimeSeriesKey');
+
             const values = await client.ts.range('fullTestTimeSeriesKey', firstTimestamp, lastTimestamp);
 
             res.status(200).json(values)

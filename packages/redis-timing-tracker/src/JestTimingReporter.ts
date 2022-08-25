@@ -1,7 +1,6 @@
 import { AggregatedResult, AssertionResult, TestContext } from '@jest/test-result';
 import newRedisClient from './newRedisClient.js';
 import { FULL_TEST_MESSAGE_TYPE, TEST_MESSAGE_TYPE, TIMING_TOPIC } from './constant.js';
-import 'dotenv/config';
 import { FullTestsTimingMessage, TestTimingMessage } from './types.js';
 import child_process from 'child_process';
 

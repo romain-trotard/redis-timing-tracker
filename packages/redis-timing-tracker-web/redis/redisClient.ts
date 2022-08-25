@@ -1,5 +1,8 @@
 import * as redis from 'redis';
-import 'dotenv/config';
+import { config as dotenv } from 'dotenv';
+import workspacesRoot from "find-yarn-workspace-root";
+
+dotenv({ path: `${workspacesRoot()}/.env` });
 
 export default function newRedisClient() {
     return redis.createClient({

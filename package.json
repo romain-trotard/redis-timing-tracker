@@ -6,6 +6,8 @@
         "packages/*"
     ],
     "scripts": {
-        "runRedisSubscriber": "yarn workspace redis-timing-tracker redisSub"
+        "runRedisSubscriber": "yarn workspace redis-timing-tracker redisSub",
+        "redisWeb": "yarn workspace redis-timing-tracker-web dev",
+        "test": "yarn workspace example-project test"
     }
 }
