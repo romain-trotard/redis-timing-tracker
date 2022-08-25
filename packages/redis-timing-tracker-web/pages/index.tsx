@@ -27,7 +27,7 @@ const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
     const [info, setInfo] = useState<{ startedAt: number; commitSha: string | null; duration: number; }>();
 
     const getInfo = async (startedAt: string) => {
-        const url = new URL('http://localhost:3000/api/test/single/info')
+        const url = new URL('http://localhost:3000/api/test/full/info')
         url.searchParams.append('startedAt', startedAt);
 
         const response = await fetch(url);
