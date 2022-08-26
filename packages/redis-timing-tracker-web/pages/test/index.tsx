@@ -173,7 +173,7 @@ const Content: NextPage<{ data: TimeSeriesEntry[]; initValue: { value: string; l
     )
 }
 
-export async function getStaticProps() {
+export async function getServerSideProps() {
     const testUrl = new URL(`${siteUrl}/api/testsNames`)
     testUrl.searchParams.append('search', '')
 
