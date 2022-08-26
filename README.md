@@ -92,6 +92,7 @@ TS.CREATE {uniqueTestName}
 
 <details>
 <summary>Example</summary>
+
 ```bash
 TS.CREATE 'Maths sum should work'
 ```
@@ -105,6 +106,7 @@ TS.ADD {uniqueTestName} {startTimestamp} {duration}
 
 <details>
 <summary>Example</summary>
+
 ```bash
 TS.ADD 'Maths sum should work' 1661537625987 47
 ```
@@ -135,6 +137,7 @@ type TestInfo = {
 
 <details>
 <summary>Example</summary>
+
 ```bash
 JSON.SET 'testRunInfo:Maths sum should work' $ {}
 
@@ -166,6 +169,7 @@ type RunningTest = {
 
 <details>
 <summary>Example</summary>
+
 ```bash
 JSON.SET 'runningTests:Maths sum should work' $ '{"describeNames": ["Maths"],"name":"sum should work","uniqueTestName":"Maths sum should work","latestRunTimestamp":1661537625987}'
 ```
@@ -190,6 +194,7 @@ FT.SEARCH idx:runningTests "@uniqueTestName:{search}" LIMIT 0 15
 
 <details>
 <summary>Example</summary>
+
 ```bash
 FT.SEARCH idx:runningTests "@uniqueTestName:Maths sum should work" LIMIT 0 15
 ```
@@ -206,6 +211,7 @@ TS.INFO {uniqueTestName}
 
 <details>
 <summary>Example</summary>
+
 ```bash
 TS.INFO 'Maths sum should work'
 ```
@@ -222,6 +228,7 @@ TS.RANGE {uniqueTestName} {firstTimestamp} {lastTimestamp}
 
 <details>
 <summary>Example</summary>
+
 ```bash
 TS.RANGE 'Maths sum should work' 1661537625987 1661537625987
 ```
@@ -236,6 +243,7 @@ JSON.GET testRunInfo:{uniqueTestName} $.{startTimestamp}
 
 <details>
 <summary>Example</summary>
+
 ```bash
 JSON.GET 'testRunInfo:Maths sum should work' $.1661537625987
 ```
@@ -263,6 +271,7 @@ TS.ADD fullTestTimeSeriesKey {startTimestamp} {duration}
 
 <details>
 <summary>Example</summary>
+
 ```bash
 TS.ADD fullTestTimeSeriesKey 1661537625987 50
 ```
@@ -294,6 +303,7 @@ type FullTestInfo = {
 
 <details>
 <summary>Example</summary>
+
 ```bash
 JSON.SET fullTestRunInfo:1661537625987 $ '{"startTimestamp":1661537625987,"commitSha":"721339f69217a080db0f08ef11501a14decccdce","duration":50,"numberOfTests":1}'
 ```
@@ -329,6 +339,7 @@ TS.RANGE fullTestTimeSeriesKey {firstTimestamp} {lastTimestamp}
 
 <details>
 <summary>Example</summary>
+
 ```bash
 TS.RANGE fullTestTimeSeriesKey 1661537625987 1661537625987
 ```
@@ -350,6 +361,7 @@ JSON.GET fullTestRunInfo:{startTimestamp}
 
 <details>
 <summary>Example</summary>
+
 ```bash
 JSON.GET fullTestRunInfo:1661537625987
 ```
