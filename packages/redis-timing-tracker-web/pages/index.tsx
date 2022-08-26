@@ -25,7 +25,7 @@ type Props = {
 };
 
 const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
-    const [info, setInfo] = useState<{ startTimestamp: number; commitSha: string | null; duration: number; }>();
+    const [info, setInfo] = useState<{ startTimestamp: number; commitSha: string | null; duration: number; numberOfTests: number; }>();
     const [data, setData] = useState(fullTestData ?? []);
     const initialFocusRef = useRef<HTMLButtonElement | null>(null);
 
@@ -88,6 +88,9 @@ const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
                                 </GridItem>
                                 <GridItem w="100%" gap={4} whiteSpace="nowrap" overflow="hidden">
                                     <Card label="Commit" value={info.commitSha ?? 'N/A'} ellipseValue copyable />
+                                </GridItem>
+                                <GridItem w="100%" gap={4} whiteSpace="nowrap" overflow="hidden">
+                                    <Card label="Number of tests" value={info.numberOfTests} />
                                 </GridItem>
                             </Grid>
                             <Flex justifyContent="flex-end" flexWrap="wrap" gap={4}>

@@ -1,6 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import newRedisClient from '../../../../redis/redisClient';
 
+const JSON_FULL_TEST_INFO_PREFIX_KEY = 'fullTestRunInfo';
+
 export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse
@@ -20,7 +22,10 @@ export default async function handler(
         const timestampNumber = parseInt(timestamp, 10);
 
         try {
-            await client.ts.del('fullTestTimeSeriesKey', timestampNumber, timestampNumber);
+            await Promise.all([
+                client.json.del(`${JSON_FULL_TEST_INFO_PREFIX_KEY}:${timestampNumber}`),
+                client.ts.del('fullTestTimeSeriesKey', timestampNumber, timestampNumber),
+            ]);
 
             res.status(200).send('Deleted');
         } catch (e) {

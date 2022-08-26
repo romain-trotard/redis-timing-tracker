@@ -20,9 +20,9 @@ Type structures are written with Typescript.
 
 In this project I use 3 services of the Redis Stack:
 - Redis pub/sub
-- Redis JSON
-- Redis Search
-- Redis Time Series
+- RedisJSON
+- RediSearch
+- RedisTimeSeries
 
 ### Pub/sub messages
 
@@ -250,6 +250,25 @@ JSON.GET 'testRunInfo:Maths sum should work' $.1661537625987
 </details>
 
 
+- **Delete a test run**:
+
+```bash
+JSON.DEL testRunInfo:{uniqueTestName} $.{timestampToDelete} 
+
+TS.DEL {uniqueTestName} {timestampToDelete} {timestampToDelete}
+```
+
+<details>
+<summary>Example</summary>
+
+```bash
+JSON.DEL 'testRunInfo:Maths sum should work' $.1661537625987
+
+TS.DEL 'Maths sum should work' 1661537625987 1661537625987
+```
+</details>
+
+
 ### `full` test
 
 This is the event to handle full test result of a run. We want to store multiple things that will be usefull for the page available on `http://localhost:3000`.
@@ -364,6 +383,25 @@ JSON.GET fullTestRunInfo:{startTimestamp}
 
 ```bash
 JSON.GET fullTestRunInfo:1661537625987
+```
+</details>
+
+
+- **Delete a test run**:
+
+```bash
+JSON.DEL fullTestRunInfo:{timestampToDelete} $ 
+
+TS.DEL fullTestTimeSeriesKey {timestampToDelete} {timestampToDelete}
+```
+
+<details>
+<summary>Example</summary>
+
+```bash
+JSON.DEL fullTestRunInfo:1661537625987 $ 
+
+TS.DEL fullTestTimeSeriesKey 1661537625987 1661537625987
 ```
 </details>
 
