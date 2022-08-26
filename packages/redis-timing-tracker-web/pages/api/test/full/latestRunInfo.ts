@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import newRedisClient from '../../../../redis/redisClient';
 
 
-const JSON_FULL_TEST_KEY = 'fullTests';
+const JSON_FULL_TEST_INFO_PREFIX_KEY = 'fullTestRunInfo';
 
 export default async function handler(
     req: NextApiRequest,
@@ -17,13 +17,13 @@ export default async function handler(
         try {
             // TODO rtr to see later why TS not happy
             // @ts-ignore
-            const latestRunEntry = await client.ft.search(`idx:${JSON_FULL_TEST_KEY}`, '*', {
+            const latestRunEntry = await client.ft.search(`idx:${JSON_FULL_TEST_INFO_PREFIX_KEY}`, '*', {
                 LIMIT: {
                     from: 0,
                     size: 1,
                 },
                 SORTBY: {
-                    BY: 'startedAt',
+                    BY: 'startTimestamp',
                     DIRECTION: 'DESC',
                 },
             });

@@ -34,7 +34,7 @@ const ByTestPage: NextPage<Props> = ({ data, initValue }) => {
 const Content: NextPage<{ data: TimeSeriesEntry[]; initValue: { value: string; label: string; } }> = ({ data, initValue }) => {
     const [chartData, setChartData] = useState(data);
     const [value, setValue] = useState<NonNullable<SingleValue<{ value: string; label: string; }>>>(initValue);
-    const [info, setInfo] = useState<{ startedAt: number; commitSha: string | null; duration: number; }>();
+    const [info, setInfo] = useState<{ startTimestamp: number; commitSha: string | null; duration: number; }>();
     const initialFocusRef = useRef<HTMLButtonElement | null>(null);
 
     const fetchTimings = async (testName: string): Promise<{ timestamp: number; value: number; }[]> => {
@@ -45,10 +45,10 @@ const Content: NextPage<{ data: TimeSeriesEntry[]; initValue: { value: string; l
         return await response.json()
     }
 
-    const getInfo = async (startedAt: string) => {
+    const getInfo = async (startTimestamp: string) => {
         const url = new URL(`${siteUrl}/api/test/single/info`)
         url.searchParams.append('testName', value.value);
-        url.searchParams.append('startedAt', startedAt);
+        url.searchParams.append('startTimestamp', startTimestamp);
 
         const response = await fetch(url);
         const testInfo = await response.json();
@@ -104,14 +104,14 @@ const Content: NextPage<{ data: TimeSeriesEntry[]; initValue: { value: string; l
                         <Box h="100%" w="100%" borderWidth="1px" borderRadius="lg" padding={5} boxShadow="base">
                             <Heading as="h2">{value?.label ?? 'Select a test'}</Heading>
                             <ResponsiveContainer height={300}>
-                                <Chart data={chartData} onValueClick={startedAt => getInfo(startedAt)} />
+                                <Chart data={chartData} onValueClick={startTimestamp => getInfo(startTimestamp)} />
                             </ResponsiveContainer>
                         </Box>
                         {info ? (
                             <Flex flexDirection="column" gap={4}>
                                 <Grid templateColumns={{ base: undefined, md: "repeat(3, 1fr)" }} gap={4} width="100%" gridAutoFlow="row">
                                     <GridItem w="100%">
-                                        <Card label="Run at" value={getDisplayDateTime(info.startedAt)} />
+                                        <Card label="Run at" value={getDisplayDateTime(info.startTimestamp)} />
                                     </GridItem>
                                     <GridItem w="100%" gap={4}>
                                         <Card label="Duration" value={`${info.duration}ms`} />
@@ -123,7 +123,7 @@ const Content: NextPage<{ data: TimeSeriesEntry[]; initValue: { value: string; l
                                 <Flex justifyContent="flex-end" flexWrap="wrap" gap={4}>
                                     <Tooltip label="Delete temporarily the point to see better the graph">
                                         <Button variant="outline" colorScheme="red" onClick={() => {
-                                            setChartData(chartData.filter(v => v.timestamp !== info.startedAt));
+                                            setChartData(chartData.filter(v => v.timestamp !== info.startTimestamp));
                                             setInfo(undefined);
                                         }}>Delete from current chart</Button>
                                     </Tooltip>
@@ -148,9 +148,9 @@ const Content: NextPage<{ data: TimeSeriesEntry[]; initValue: { value: string; l
                                                 pb={4}
                                             >
                                                 <Button size="sm" colorScheme='red' ref={initialFocusRef} onClick={async () => {
-                                                    await deleteValue(info.startedAt);
+                                                    await deleteValue(info.startTimestamp);
 
-                                                    setChartData(chartData.filter(v => v.timestamp !== info.startedAt));
+                                                    setChartData(chartData.filter(v => v.timestamp !== info.startTimestamp));
                                                     setInfo(undefined);
                                                 }}>
                                                     Delete

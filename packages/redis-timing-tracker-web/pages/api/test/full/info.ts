@@ -10,17 +10,14 @@ export default async function handler(
     if (req.method === 'POST') {
         res.status(404).send('Not found')
     } else {
-        const { query: { startedAt } } = req;
+        const { query: { startTimestamp } } = req;
 
         const client = newRedisClient();
         await client.connect();
 
         try {
-
             // TODO rtr better typing
-            const infoResult: object[] | null = await client.json.get(JSON_FULL_TEST_INFO_PREFIX_KEY, { path: `$.${startedAt}` }) as object[];
-
-            const info = (infoResult !== null && infoResult.length > 0) ? infoResult[0] : null;
+            const info: object[] | null = await client.json.get(`${JSON_FULL_TEST_INFO_PREFIX_KEY}:${startTimestamp}`) as object[];
 
             res.status(200).json(info);
         } catch (e) {
@@ -28,7 +25,6 @@ export default async function handler(
         } finally {
             await client.disconnect();
         }
-
     }
 }
 

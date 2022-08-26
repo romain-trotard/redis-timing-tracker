@@ -6,7 +6,6 @@ import { AllTimingMessage, FullTestsTimingMessage, TestTimingMessage } from './t
 const JSON_PREFIX_KEY = 'runningTests';
 const JSON_TEST_INFO_PREFIX_KEY = 'testRunInfo';
 const JSON_FULL_TEST_INFO_PREFIX_KEY = 'fullTestRunInfo';
-const JSON_FULL_TEST_KEY = 'fullTests';
 
 async function createRedisSearchIndex(redisClient: ReturnType<typeof newRedisClient>) {
     try {
@@ -43,15 +42,15 @@ async function createFullTestSearchIndex(redisClient: ReturnType<typeof newRedis
         await redisClient.ft.create(
             // Actually it works so let's remove the TS error
             // @ts-ignore
-            `idx:${JSON_FULL_TEST_KEY}`,
+            `idx:${JSON_FULL_TEST_INFO_PREFIX_KEY}`,
             {
-                '$.startedAt': {
+                '$.startTimestamp': {
                     type: SchemaFieldTypes.NUMERIC,
                     SORTABLE: true,
-                    AS: 'startedAt',
+                    AS: 'startTimestamp',
                 }
             },
-            { ON: 'JSON', PREFIX: JSON_FULL_TEST_KEY }
+            { ON: 'JSON', PREFIX: JSON_FULL_TEST_INFO_PREFIX_KEY }
         );
     } catch (e: any) {
         if (e.message !== 'Index already exists') {
@@ -68,14 +67,6 @@ async function createTestInfoByRunJson(redisClient: ReturnType<typeof newRedisCl
     }
 }
 
-async function createFullTestInfoByRunJson(redisClient: ReturnType<typeof newRedisClient>) {
-    const info = await redisClient.json.type(JSON_FULL_TEST_INFO_PREFIX_KEY);
-
-    if (info === null) {
-        await redisClient.json.set(JSON_FULL_TEST_INFO_PREFIX_KEY, '$', {});
-    }
-}
-
 async function run() {
     const subscribeClient = newRedisClient();
     const redisClient = newRedisClient();
@@ -83,7 +74,13 @@ async function run() {
     await subscribeClient.connect();
     await redisClient.connect();
 
-    await createRedisSearchIndex(redisClient);
+    await Promise.all([
+        // Init for full tests
+        createFullTestSearchIndex(redisClient),
+        createRedisTimeSeries(redisClient, FULL_TEST_TIME_SERIES_KEY),
+        // Init for single tests
+        createRedisSearchIndex(redisClient),
+    ]);
 
 
     await subscribeClient.subscribe(TIMING_TOPIC, async stringMessage => {
@@ -92,25 +89,17 @@ async function run() {
         try {
             switch (message.type) {
                 case FULL_TEST_MESSAGE_TYPE: {
-                    const { duration, startedAt, numberOfTests, commitSha } = message as FullTestsTimingMessage;
+                    const { duration, startTimestamp, numberOfTests, commitSha } = message as FullTestsTimingMessage;
 
                     await Promise.all([
-                        createFullTestSearchIndex(redisClient),
-                        createRedisTimeSeries(redisClient, FULL_TEST_TIME_SERIES_KEY),
-                        createFullTestInfoByRunJson(redisClient),
-                    ]);
-
-
-                    await Promise.all([
-                        redisClient.json.set(JSON_FULL_TEST_INFO_PREFIX_KEY, `$.${startedAt}`, { startedAt, commitSha: commitSha ?? null, duration, numberOfTests }),
-                        redisClient.ts.add(FULL_TEST_TIME_SERIES_KEY, startedAt, duration),
-                        redisClient.json.set(`${JSON_FULL_TEST_KEY}:${startedAt}`, '$', { startedAt, duration, numberOfTests }),
+                        redisClient.ts.add(FULL_TEST_TIME_SERIES_KEY, startTimestamp, duration),
+                        redisClient.json.set(`${JSON_FULL_TEST_INFO_PREFIX_KEY}:${startTimestamp}`, '$', { startTimestamp, commitSha: commitSha ?? null, duration, numberOfTests }),
                     ]);
 
                     break;
                 }
                 case TEST_MESSAGE_TYPE: {
-                    const { duration, describeNames, name, hasError, startedAt, commitSha } = message as TestTimingMessage;
+                    const { duration, describeNames, name, hasError, startTimestamp, commitSha } = message as TestTimingMessage;
 
                     // Do nothing for the moment if there is an error on the test
                     if (hasError) {
@@ -121,14 +110,18 @@ async function run() {
                     const uniqueTestName = [...describeNames, name].join(' ');
                     const testInfoKey = `${JSON_TEST_INFO_PREFIX_KEY}:${uniqueTestName}`;
 
-                    await createRedisTimeSeries(redisClient, uniqueTestName);
-                    await createTestInfoByRunJson(redisClient, testInfoKey);
+
+                    // Init for each test (depends on the name of the test)
+                    await Promise.all([
+                        createRedisTimeSeries(redisClient, uniqueTestName),
+                        createTestInfoByRunJson(redisClient, testInfoKey),
+                    ]);
 
                     await Promise.all([
                         // The key is when the test has been started, because it's unique
-                        redisClient.json.set(testInfoKey, `$.${startedAt}`, { startedAt, commitSha: commitSha ?? null, duration }),
-                        redisClient.ts.add(uniqueTestName, startedAt, duration),
-                        redisClient.json.set(`${JSON_PREFIX_KEY}:${uniqueTestName}`, '$', { describeNames, name, uniqueTestName, latestRunTimestamp: startedAt }),
+                        redisClient.json.set(testInfoKey, `$.${startTimestamp}`, { startTimestamp, commitSha: commitSha ?? null, duration }),
+                        redisClient.ts.add(uniqueTestName, startTimestamp, duration),
+                        redisClient.json.set(`${JSON_PREFIX_KEY}:${uniqueTestName}`, '$', { describeNames, name, uniqueTestName, latestRunTimestamp: startTimestamp }),
                     ]);
 
                     break;

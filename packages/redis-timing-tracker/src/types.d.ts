@@ -7,7 +7,7 @@ export enum TimingMessageEnum {
 
 type TimingMessage<TTimingMessageType extends TimingMessageEnum> = {
     duration: number;
-    startedAt: number;
+    startTimestamp: number;
     commitSha: string | undefined;
 }
 

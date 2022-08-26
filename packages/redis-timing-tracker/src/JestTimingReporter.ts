@@ -22,18 +22,18 @@ export default class JestTimingReporter {
         this.commitSha = getCurrentCommitSha();
     }
 
-    async processSingleTest(test: AssertionResult, startedAt: number) {
+    async processSingleTest(test: AssertionResult, startTimestamp: number) {
         const { duration, title: name, failureMessages: errors, ancestorTitles: describeNames } = test;
 
         if (duration != null) {
-            const message: TestTimingMessage = { type: TEST_MESSAGE_TYPE, duration, describeNames, name, hasError: errors.length > 0, startedAt, commitSha: this.commitSha };
+            const message: TestTimingMessage = { type: TEST_MESSAGE_TYPE, duration, describeNames, name, hasError: errors.length > 0, startTimestamp, commitSha: this.commitSha };
 
             await this.redisClient.publish(TIMING_TOPIC, JSON.stringify(message));
         }
     }
 
-    async processWholeTestResult(startedAt: number, endedAt: number, numberOfTests: number) {
-        const message: FullTestsTimingMessage = { type: FULL_TEST_MESSAGE_TYPE, duration: endedAt - startedAt, startedAt, numberOfTests, commitSha: this.commitSha };
+    async processWholeTestResult(startTimestamp: number, endedAt: number, numberOfTests: number) {
+        const message: FullTestsTimingMessage = { type: FULL_TEST_MESSAGE_TYPE, duration: endedAt - startTimestamp, startTimestamp, numberOfTests, commitSha: this.commitSha };
 
         await this.redisClient.publish(TIMING_TOPIC, JSON.stringify(message));
     }

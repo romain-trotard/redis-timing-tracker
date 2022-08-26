@@ -10,7 +10,7 @@ export default async function handler(
     if (req.method === 'POST') {
         res.status(404).send('Not found')
     } else {
-        const { query: { testName, startedAt } } = req;
+        const { query: { testName, startTimestamp } } = req;
 
         const client = newRedisClient();
         await client.connect();
@@ -19,7 +19,7 @@ export default async function handler(
 
             const testInfoKey = `${JSON_TEST_INFO_PREFIX_KEY}:${testName}`;
             // TODO rtr better typing
-            const infoResult: object[] | null = await client.json.get(testInfoKey, { path: `$.${startedAt}` }) as object[];
+            const infoResult: object[] | null = await client.json.get(testInfoKey, { path: `$.${startTimestamp}` }) as object[];
 
             const info = (infoResult !== null && infoResult.length > 0) ? infoResult[0] : null;
 

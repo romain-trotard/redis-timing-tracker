@@ -14,7 +14,7 @@ Here is little achitecture diagram:
 
 ![Architecture diagram of the project](./architecture.svg)
 
-### How the data is stored:
+### Stack used
 
 Type structures are written with Typescript. 
 
@@ -24,11 +24,12 @@ In this project I use 3 services of the Redis Stack:
 - Redis Search
 - Redis Time Series
 
+### Pub/sub messages
 
 Before looking at how the data is stored. It's important to see how Redis pub/sub is used.
 Events are published and subscribed to a topic `timingTopic`. There are 2 types of events:
 
-- Event for each test result that ran with the type `singleTest`:
+- Event for each test result that ran with the type `singleTest`. It allows us to know the name of the test, when it has been launched, the duration and the commit sha if we are in a git repository. The full type is the following one:
 
 ```ts
 type SingleTestTimingEvent = {
@@ -41,7 +42,7 @@ type SingleTestTimingEvent = {
     // The duration of the test
     duration: number;
     // The timestamp when the test has been started
-    startedAt: number;
+    startTimestamp: number;
     // The sha of the commit if we are in a git repository
     commitSha: string | undefined;
     // Indicates if the test finished with error
@@ -49,8 +50,11 @@ type SingleTestTimingEvent = {
 }
 ```
 
-- Event to summarize all tests run with the type `fullTest`:
+> **Note:** By concatenating the `describeNames` and the `name` we get the `uniqueTestName` of the test.
 
+- Event to summarize all tests run with the type `fullTest`. Thanks to it, we know how much time takes all the tests to run, when the tests ran, the number of test launched and the commit sha if we are in a git repository. The full type is the following one:
+
+ 
 ```ts
 type FullTestTimingEvent = {
     // The type of the event
@@ -58,7 +62,7 @@ type FullTestTimingEvent = {
     // The duration of running all tests
     duration: number;
     // The timstamp when the user launched tests
-    startedAt: number;
+    startTimestamp: number;
     // The sha of the commit if we are in a git repository
     commitSha: string | undefined;
     // Indicates if the test finished with error
@@ -71,15 +75,25 @@ A script is subscribed to the `timingTopic` and persist data in redis.
 
 ----
 
-Let's talk about each event separetely to see what is stored for each of them.
+Let's talk about each event separetely to see what is stored and how the data is accessed for each of them.
 
 
-1. Event `singleTest`
+### `singleTest` event
 
-- Keep tracking of information about a run with `json` with the following key: `testRunInfo:{uniqueTestName}` 
+This is the event to handle the result of a single test run. We want to store multiple things that will be usefull for the page available on `http://localhost:3000/test`.
+
+#### How the data is stored
+
+- The main data we store, is the Time Series. We want to draw some chart to be quickly see the evolution of the duration of tests. So we store the `duration` as value and the `startTimestamp` as key in a time series:
 
 ```bash
-JSON.SET testRunInfo:{uniqueTestName} $.{startedAt} {value}
+TS.ADD {uniqueTestName} {startTimestamp} {duration}
+```
+
+- For each run, we want to store some additional information like the commit sha. This will be accessible by clicking on a point of the chart. This information is store as `JSON` with the key: `testRunInfo:{uniqueTestName}` 
+
+```bash
+JSON.SET testRunInfo:{uniqueTestName} $.{startTimestamp} {value}
 ```
 
 The format of the value is:
@@ -87,7 +101,7 @@ The format of the value is:
 ```ts
 type TestInfo = {
     // The timstamp when the user launched tests
-    startedAt: number;
+    startTimestamp: number;
     // The sha of the commit if we are in a git repository
     commitSha: string | null;
     // The duration of running all tests
@@ -95,7 +109,8 @@ type TestInfo = {
 }
 ```
 
-- Keep information about the last run, and track every test that has run:
+
+- We want to keep information about the last run for each test that has run:
 
 ```bash
 JSON.SET runningTests:{uniqueTestName} $ {value}
@@ -116,30 +131,65 @@ type RunningTest = {
 }
 ```
 
-- Make an index with the previous data (this will be usefull to search test by `uniqueTestName`):
+- Thanks to the previous data, we make an index which will be usefull to search test by `uniqueTestName`:
 
 ```bash
 FT.CREATE idx:runningTests ON JSON PREFIX runningTests SCHEMA $.uniqueTestName AS uniqueTestName TEXT SORTABLE
 ```
 
-- Store the duration in a time series:
+
+#### How the data is accessed:
+
+
+- **Get all test names that has ever ran**:
 
 ```bash
-TS.ADD {uniqueTestName} {startedAt} {duration}
+FT.SEARCH idx:runningTests "@uniqueTestName:{search}" LIMIT 0 15 
 ```
 
-2. Event `fullTest`
 
-- Store the duration in a time series:
+- **Get the first and last timestamp in the TS** (`firstTimestamp` and `lastTimestamp`):
 
 ```bash
-TS.ADD fullTestTimeSeriesKey {startedAt} {duration}
+TS.INFO {uniqueTestName}
 ```
 
-- Keep tracking of information about the run with `json` with the following key: `fullTests:{startedAt}` 
+> **Note:** Later, I should get the values for the last week and allow users to go back in time for performance and UX reasons. So this will be no more useful.
+
+
+- **Get time series data for chart**:
 
 ```bash
-JSON.SET fullTests:{startedAt} $ {value}
+TS.RANGE {uniqueTestName} {firstTimestamp} {lastTimestamp}
+```
+
+> **Note:** `firstTimestamp` and `lastTimestamp` are the values got previously.
+
+
+- **Get information about a run**:
+
+```bash
+JSON.GET testRunInfo:{uniqueTestName} $.{startTimestamp} 
+```
+
+
+### `full` test
+
+This is the event to handle full test result of a run. We want to store multiple things that will be usefull for the page available on `http://localhost:3000`.
+
+
+#### How the data is stored
+
+- Like for single test run. We want to display a chart. So we use a Time Series to store the `duration` by `startTimestamp`:
+
+```bash
+TS.ADD fullTestTimeSeriesKey {startTimestamp} {duration}
+```
+
+- We also want to keep information for each run that we store with `JSON` with the following key: `fullTestRunInfo:{startTimestamp}` 
+
+```bash
+JSON.SET fullTestRunInfo:{startTimestamp} $ {value}
 ```
 
 The format of the value is:
@@ -147,7 +197,7 @@ The format of the value is:
 ```ts
 type FullTestInfo = {
     // The timstamp when the user launched tests
-    startedAt: number;
+    startTimestamp: number;
     // The sha of the commit if we are in a git repository
     commitSha: string | null;
     // The duration of running all tests
@@ -157,50 +207,29 @@ type FullTestInfo = {
 }
 ```
 
+> **Note:** I don't store the data in the same format that single test. Because I didn't find how to make an index otherwise.
+
+
+- I make a search index from the previous data, that will allow me to get the last run easier:
+
+```bash
+FT.CREATE idx:fullTestRunInfo ON JSON PREFIX fullTestRunInfo SCHEMA $.startTimestamp AS startTimestamp NUMERIC SORTABLE
+```
+
 
 ### How the data is accessed:
 
-Let's see how is accessed the data for each page of the application.
 
-1. Single test page
-
-- get test names from the search index:
-
-```bash
-FT.SEARCH idx:runningTests "@uniqueTestName:{search}" LIMIT 0 15 
-```
-
-- get the first and last timestamp (`firstTimestamp` and `lastTimestamp`):
-
-```bash
-TS.INFO {uniqueTestName}
-```
-
-- get time series data:
-
-```bash
-TS.RANGE {uniqueTestName} {firstTimestamp} {lastTimestamp}
-```
-
-> **Note:** `firstTimestamp` and `lastTimestamp` are the values got previously.
-
-
-- get information about a run:
-
-```bash
-JSON.GET testRunInfo:{uniqueTestName} $.{startedAt} 
-```
-
-
-2. Full tests page
-
-- get the first and last timestamp (`firstTimestamp` and `lastTimestamp`):
+- **Get the first and last timestamp in the TS** (`firstTimestamp` and `lastTimestamp`):
 
 ```bash
 TS.INFO fullTestTimeSeriesKey
 ```
 
-- get time series data:
+> **Note:** Later, I should get the values for the last week and allow users to go back in time for performance and UX reasons. So this will be no more useful.
+
+
+- **Get time series data for chart**:
 
 ```bash
 TS.RANGE fullTestTimeSeriesKey {firstTimestamp} {lastTimestamp}
@@ -208,16 +237,18 @@ TS.RANGE fullTestTimeSeriesKey {firstTimestamp} {lastTimestamp}
 
 > **Note:** `firstTimestamp` and `lastTimestamp` are the values got previously.
 
-- get information about a run:
+
+- **Get information about the last run**:
 
 ```bash
-JSON.GET fullTestRunInfo $.{startedAt} 
+FT.SEARCH idx:fullTestRunInfo * LIMIT 0 1 SORTBY startTimestamp DESC
 ```
 
-- get information about last run:
+
+- **Get information about a run**:
 
 ```bash
-FT.SEARCH idx:fullTests * LIMIT 0 1 SORTBY startedAt DESC
+JSON.GET fullTestRunInfo:{startTimestamp}
 ```
 
 

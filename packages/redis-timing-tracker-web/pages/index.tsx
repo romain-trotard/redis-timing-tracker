@@ -17,7 +17,7 @@ type TimeSeriesEntry = {
     value: number;
 }
 
-type LatestRunInfo = { startedAt: number; duration: number; numberOfTests: number; };
+type LatestRunInfo = { startTimestamp: number; duration: number; numberOfTests: number; };
 
 type Props = {
     fullTestData: TimeSeriesEntry[] | null;
@@ -25,7 +25,7 @@ type Props = {
 };
 
 const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
-    const [info, setInfo] = useState<{ startedAt: number; commitSha: string | null; duration: number; }>();
+    const [info, setInfo] = useState<{ startTimestamp: number; commitSha: string | null; duration: number; }>();
     const [data, setData] = useState(fullTestData ?? []);
     const initialFocusRef = useRef<HTMLButtonElement | null>(null);
 
@@ -33,9 +33,9 @@ const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
         return <EmptyState />
     }
 
-    const getInfo = async (startedAt: string) => {
+    const getInfo = async (startTimestamp: string) => {
         const url = new URL(`${siteUrl}/api/test/full/info`)
-        url.searchParams.append('startedAt', startedAt);
+        url.searchParams.append('startTimestamp', startTimestamp);
 
         const response = await fetch(url);
         const testInfo = await response.json();
@@ -74,14 +74,14 @@ const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
                     <Box h="100%" w="100%" borderWidth="1px" borderRadius="lg" padding={5} boxShadow="base">
                         <Heading as="h2">Full tests timing</Heading>
                         <ResponsiveContainer height={300}>
-                            <Chart data={data} onValueClick={startedAt => getInfo(startedAt)} />
+                            <Chart data={data} onValueClick={startTimestamp => getInfo(startTimestamp)} />
                         </ResponsiveContainer>
                     </Box>
                     {info ? (
                         <Flex flexDirection="column" gap={4}>
                             <Grid templateColumns={{ base: undefined, md: "repeat(3, 1fr)" }} gap={4} width="100%" gridAutoFlow="row">
                                 <GridItem w="100%">
-                                    <Card label="Run at" value={getDisplayDateTime(info.startedAt)} />
+                                    <Card label="Run at" value={getDisplayDateTime(info.startTimestamp)} />
                                 </GridItem>
                                 <GridItem w="100%" gap={4}>
                                     <Card label="Duration" value={`${info.duration}ms`} />
@@ -93,7 +93,7 @@ const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
                             <Flex justifyContent="flex-end" flexWrap="wrap" gap={4}>
                                 <Tooltip label="Delete temporarily the point to see better the graph">
                                     <Button variant="outline" colorScheme="red" onClick={() => {
-                                        setData(data.filter(v => v.timestamp !== info.startedAt));
+                                        setData(data.filter(v => v.timestamp !== info.startTimestamp));
                                         setInfo(undefined);
                                     }}>Delete from current chart</Button>
                                 </Tooltip>
@@ -119,9 +119,9 @@ const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
                                         >
                                             <ButtonGroup size='sm'>
                                                 <Button colorScheme='red' ref={initialFocusRef} onClick={async () => {
-                                                    await deleteValue(info.startedAt);
+                                                    await deleteValue(info.startTimestamp);
 
-                                                    setData(data.filter(v => v.timestamp !== info.startedAt));
+                                                    setData(data.filter(v => v.timestamp !== info.startTimestamp));
                                                     setInfo(undefined);
                                                 }}>
                                                     Delete
