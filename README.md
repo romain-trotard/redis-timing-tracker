@@ -84,15 +84,39 @@ This is the event to handle the result of a single test run. We want to store mu
 
 #### How the data is stored
 
+- I create the Time Series with the dynamic key `{uniqueTestName}` if it does not already exist:
+
+```bash
+TS.CREATE {uniqueTestName}
+```
+
+<details>
+<summary>Example</summary>
+```bash
+TS.CREATE 'Maths sum should work'
+```
+</details>
+
 - The main data we store, is the Time Series. We want to draw some chart to be quickly see the evolution of the duration of tests. So we store the `duration` as value and the `startTimestamp` as key in a time series:
 
 ```bash
 TS.ADD {uniqueTestName} {startTimestamp} {duration}
 ```
 
+<details>
+<summary>Example</summary>
+```bash
+TS.ADD 'Maths sum should work' 1661537625987 47
+```
+</details>
+
 - For each run, we want to store some additional information like the commit sha. This will be accessible by clicking on a point of the chart. This information is store as `JSON` with the key: `testRunInfo:{uniqueTestName}` 
 
 ```bash
+// First I set the root path data if it does not already exist
+JSON.SET testRunInfo:{uniqueTestName} $ {}
+
+// Then I can set the info about the run
 JSON.SET testRunInfo:{uniqueTestName} $.{startTimestamp} {value}
 ```
 
@@ -108,6 +132,15 @@ type TestInfo = {
     duration: number;
 }
 ```
+
+<details>
+<summary>Example</summary>
+```bash
+JSON.SET 'testRunInfo:Maths sum should work' $ {}
+
+JSON.SET 'testRunInfo:Maths sum should work' $.1661537625987 '{"startTimestamp":1661537625987,"commitSha":"721339f69217a080db0f08ef11501a14decccdce","duration":47}'
+```
+</details>
 
 
 - We want to keep information about the last run for each test that has run:
@@ -131,10 +164,18 @@ type RunningTest = {
 }
 ```
 
+<details>
+<summary>Example</summary>
+```bash
+JSON.SET 'runningTests:Maths sum should work' $ '{"describeNames": ["Maths"],"name":"sum should work","uniqueTestName":"Maths sum should work","latestRunTimestamp":1661537625987}'
+```
+</details>
+
+
 - Thanks to the previous data, we make an index which will be usefull to search test by `uniqueTestName`:
 
 ```bash
-FT.CREATE idx:runningTests ON JSON PREFIX runningTests SCHEMA $.uniqueTestName AS uniqueTestName TEXT SORTABLE
+FT.CREATE idx:runningTests ON JSON PREFIX 1 runningTests: SCHEMA $.uniqueTestName AS uniqueTestName TEXT SORTABLE
 ```
 
 
@@ -147,6 +188,13 @@ FT.CREATE idx:runningTests ON JSON PREFIX runningTests SCHEMA $.uniqueTestName A
 FT.SEARCH idx:runningTests "@uniqueTestName:{search}" LIMIT 0 15 
 ```
 
+<details>
+<summary>Example</summary>
+```bash
+FT.SEARCH idx:runningTests "@uniqueTestName:Maths sum should work" LIMIT 0 15
+```
+</details>
+
 
 - **Get the first and last timestamp in the TS** (`firstTimestamp` and `lastTimestamp`):
 
@@ -155,6 +203,13 @@ TS.INFO {uniqueTestName}
 ```
 
 > **Note:** Later, I should get the values for the last week and allow users to go back in time for performance and UX reasons. So this will be no more useful.
+
+<details>
+<summary>Example</summary>
+```bash
+TS.INFO 'Maths sum should work'
+```
+</details>
 
 
 - **Get time series data for chart**:
@@ -165,12 +220,26 @@ TS.RANGE {uniqueTestName} {firstTimestamp} {lastTimestamp}
 
 > **Note:** `firstTimestamp` and `lastTimestamp` are the values got previously.
 
+<details>
+<summary>Example</summary>
+```bash
+TS.RANGE 'Maths sum should work' 1661537625987 1661537625987
+```
+</details>
+
 
 - **Get information about a run**:
 
 ```bash
 JSON.GET testRunInfo:{uniqueTestName} $.{startTimestamp} 
 ```
+
+<details>
+<summary>Example</summary>
+```bash
+JSON.GET 'testRunInfo:Maths sum should work' $.1661537625987
+```
+</details>
 
 
 ### `full` test
@@ -180,11 +249,25 @@ This is the event to handle full test result of a run. We want to store multiple
 
 #### How the data is stored
 
+- I create the Time Series with key `fullTestTimeSeriesKey` if it does not already exist:
+
+```bash
+TS.CREATE fullTestTimeSeriesKey
+```
+
 - Like for single test run. We want to display a chart. So we use a Time Series to store the `duration` by `startTimestamp`:
 
 ```bash
 TS.ADD fullTestTimeSeriesKey {startTimestamp} {duration}
 ```
+
+<details>
+<summary>Example</summary>
+```bash
+TS.ADD fullTestTimeSeriesKey 1661537625987 50
+```
+</details>
+
 
 - We also want to keep information for each run that we store with `JSON` with the following key: `fullTestRunInfo:{startTimestamp}` 
 
@@ -209,11 +292,18 @@ type FullTestInfo = {
 
 > **Note:** I don't store the data in the same format that single test. Because I didn't find how to make an index otherwise.
 
+<details>
+<summary>Example</summary>
+```bash
+JSON.SET fullTestRunInfo:1661537625987 $ '{"startTimestamp":1661537625987,"commitSha":"721339f69217a080db0f08ef11501a14decccdce","duration":50,"numberOfTests":1}'
+```
+</details>
+
 
 - I make a search index from the previous data, that will allow me to get the last run easier:
 
 ```bash
-FT.CREATE idx:fullTestRunInfo ON JSON PREFIX fullTestRunInfo SCHEMA $.startTimestamp AS startTimestamp NUMERIC SORTABLE
+FT.CREATE idx:fullTestRunInfo ON JSON PREFIX 1 fullTestRunInfo: SCHEMA $.startTimestamp AS startTimestamp NUMERIC SORTABLE
 ```
 
 
@@ -237,6 +327,13 @@ TS.RANGE fullTestTimeSeriesKey {firstTimestamp} {lastTimestamp}
 
 > **Note:** `firstTimestamp` and `lastTimestamp` are the values got previously.
 
+<details>
+<summary>Example</summary>
+```bash
+TS.RANGE fullTestTimeSeriesKey 1661537625987 1661537625987
+```
+</details>
+
 
 - **Get information about the last run**:
 
@@ -250,6 +347,13 @@ FT.SEARCH idx:fullTestRunInfo * LIMIT 0 1 SORTBY startTimestamp DESC
 ```bash
 JSON.GET fullTestRunInfo:{startTimestamp}
 ```
+
+<details>
+<summary>Example</summary>
+```bash
+JSON.GET fullTestRunInfo:1661537625987
+```
+</details>
 
 
 ## How to run it locally?
