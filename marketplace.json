@@ -1,0 +1,24 @@
+{
+    "app_name": "Redis timing tracker",
+    "description": "Track the timing of your jest tests to follow the evolution of time passed for each test.",
+    "hidden": "false",
+    "rank": "21",
+    "type": "Building Block",
+    "contributed_by": "Romain Trotard",
+    "repo_url": "https://github.com/romain-trotard/redis-timing-tracker",
+    "download_url": "https://github.com/romain-trotard/redis-timing-tracker/archive/main.zip",
+    "hosted_url": "https://redis-timing-tracker.vercel.app/",
+    "quick_deploy": "false",
+    "deploy_buttons": [],
+    "language": ["JavaScript"],
+    "redis_commands": ["TS.CREATE", "TS.ADD", "JSON.SET", "FT.CREATE", "FT.SEARCH", "TS.INFO", "TS.RANGE", "JSON.GET"],
+    "redis_features": [],
+    "redis_modules": ["RediJSON", "RediSearch", "RedisTimeseries"],
+    "app_image_urls": [
+        "TODO rtr"
+    ],
+    "youtube_url": "",
+    "special_tags": ["Hackathon"],
+    "verticals": ["Others"],
+    "markdown": "https://github.com/romain-trotard/redis-timing-tracker/blob/main/README.md"
+}
