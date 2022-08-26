@@ -7,6 +7,7 @@ import { ResponsiveContainer } from 'recharts'
 import EmptyState from '../components/EmptyState'
 import { useRef, useState } from 'react'
 import { getDisplayDateTime } from '../utils/date'
+import siteUrl from '../utils/siteUrl'
 
 
 const Chart = dynamic(() => import('../components/Chart'), { ssr: false })
@@ -33,7 +34,7 @@ const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
     }
 
     const getInfo = async (startedAt: string) => {
-        const url = new URL('http://localhost:3000/api/test/full/info')
+        const url = new URL(`${siteUrl}/api/test/full/info`)
         url.searchParams.append('startedAt', startedAt);
 
         const response = await fetch(url);
@@ -43,7 +44,7 @@ const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
     }
 
     const deleteValue = async (timestamp: number) => {
-        const url = new URL('http://localhost:3000/api/test/full/timing')
+        const url = new URL(`${siteUrl}/api/test/full/timing`)
         url.searchParams.append('timestamp', timestamp.toString());
 
         await fetch(url, { method: 'DELETE' });
@@ -144,10 +145,10 @@ const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
 }
 
 export async function getStaticProps() {
-    const testUrl = new URL('http://localhost:3000/api/testsNames')
+    const testUrl = new URL(`${siteUrl}/api/testsNames`)
     testUrl.searchParams.append('search', '')
 
-    const fullTestResponse = await fetch('http://localhost:3000/api/test/full/timing');
+    const fullTestResponse = await fetch(`${siteUrl}/api/test/full/timing`);
     const fullTestData = await fullTestResponse.json();
 
     // If no data from thid call, I know that I don't need to fetch anything else
@@ -161,7 +162,7 @@ export async function getStaticProps() {
     }
 
 
-    const latestRunResponse = await fetch('http://localhost:3000/api/test/full/latestRunInfo');
+    const latestRunResponse = await fetch(`${siteUrl}/api/test/full/latestRunInfo`);
     const latestRunInfo = await latestRunResponse.json();
 
     return {

@@ -8,6 +8,7 @@ import { ResponsiveContainer } from 'recharts'
 import Card from '../../components/Card'
 import { getDisplayDateTime } from '../../utils/date'
 import EmptyState from '../../components/EmptyState'
+import siteUrl from '../../utils/siteUrl'
 
 
 const Chart = dynamic(() => import('../../components/Chart'), { ssr: false })
@@ -37,7 +38,7 @@ const Content: NextPage<{ data: TimeSeriesEntry[]; initValue: { value: string; l
     const initialFocusRef = useRef<HTMLButtonElement | null>(null);
 
     const fetchTimings = async (testName: string): Promise<{ timestamp: number; value: number; }[]> => {
-        const url = new URL('http://localhost:3000/api/timings')
+        const url = new URL(`${siteUrl}/api/timings`)
         url.searchParams.append('testName', testName);
 
         const response = await fetch(url)
@@ -45,7 +46,7 @@ const Content: NextPage<{ data: TimeSeriesEntry[]; initValue: { value: string; l
     }
 
     const getInfo = async (startedAt: string) => {
-        const url = new URL('http://localhost:3000/api/test/single/info')
+        const url = new URL(`${siteUrl}/api/test/single/info`)
         url.searchParams.append('testName', value.value);
         url.searchParams.append('startedAt', startedAt);
 
@@ -56,7 +57,7 @@ const Content: NextPage<{ data: TimeSeriesEntry[]; initValue: { value: string; l
     }
 
     const deleteValue = async (timestamp: number) => {
-        const url = new URL('http://localhost:3000/api/timings')
+        const url = new URL(`${siteUrl}/api/timings`)
         url.searchParams.append('timestamp', timestamp.toString());
         url.searchParams.append('testName', value.value);
 
@@ -88,7 +89,7 @@ const Content: NextPage<{ data: TimeSeriesEntry[]; initValue: { value: string; l
                                 }}
                                 defaultOptions
                                 loadOptions={(inputValue, callback) => {
-                                    const url = new URL('http://localhost:3000/api/testsNames')
+                                    const url = new URL(`${siteUrl}/api/testsNames`)
                                     url.searchParams.append('search', inputValue)
 
                                     fetch(url).then(response => {
@@ -173,7 +174,7 @@ const Content: NextPage<{ data: TimeSeriesEntry[]; initValue: { value: string; l
 }
 
 export async function getStaticProps() {
-    const testUrl = new URL('http://localhost:3000/api/testsNames')
+    const testUrl = new URL(`${siteUrl}/api/testsNames`)
     testUrl.searchParams.append('search', '')
 
     const testsResponse = await fetch(testUrl);
@@ -189,7 +190,7 @@ export async function getStaticProps() {
     }
 
     const fetchTimings = async (testName: string) => {
-        const url = new URL('http://localhost:3000/api/timings')
+        const url = new URL(`${siteUrl}/api/timings`)
         url.searchParams.append('testName', testName);
         return await fetch(url)
     }
