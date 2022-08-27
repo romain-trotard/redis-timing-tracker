@@ -8,6 +8,7 @@ import EmptyState from '../components/EmptyState'
 import { useRef, useState } from 'react'
 import { getDisplayDateTime } from '../utils/date'
 import siteUrl from '../utils/siteUrl'
+import { getHumanDurationValue } from '../utils/time'
 
 
 const Chart = dynamic(() => import('../components/Chart'), { ssr: false })
@@ -63,13 +64,13 @@ const Home: NextPage<Props> = ({ fullTestData, latestRunInfo, siteUrl }) => {
                 <Container maxW="container.lg" w="100%" as={Flex} flexDirection="column" gap={5} alignItems="center">
                     <Grid templateColumns={{ base: undefined, md: "repeat(3, 1fr)" }} gap={4} width="100%">
                         <GridItem w="100%">
-                            <Card label="Last duration" value={latestRunInfo === null ? 'N/A' : `${latestRunInfo.duration}ms`} />
+                            <Card label="Last duration" value={latestRunInfo === null ? 'N/A' : getHumanDurationValue(latestRunInfo.duration)} />
                         </GridItem>
                         <GridItem w="100%" gap={4}>
                             <Card label="Number of tests" value={latestRunInfo === null ? 'N/A' : latestRunInfo.numberOfTests} />
                         </GridItem>
                         <GridItem w="100%" gap={4}>
-                            <Card label="Average time by test" value={latestRunInfo === null ? 'N/A' : `${(latestRunInfo.duration / latestRunInfo.numberOfTests).toFixed(2)}ms`} />
+                            <Card label="Average time by test" value={latestRunInfo === null ? 'N/A' : getHumanDurationValue(Number((latestRunInfo.duration / latestRunInfo.numberOfTests).toFixed(2)))} />
                         </GridItem>
                     </Grid>
                     <Box h="100%" w="100%" borderWidth="1px" borderRadius="lg" padding={5} boxShadow="base">
@@ -85,7 +86,7 @@ const Home: NextPage<Props> = ({ fullTestData, latestRunInfo, siteUrl }) => {
                                     <Card label="Run at" value={getDisplayDateTime(info.startTimestamp)} />
                                 </GridItem>
                                 <GridItem w="100%" gap={4}>
-                                    <Card label="Duration" value={`${info.duration}ms`} />
+                                    <Card label="Duration" value={getHumanDurationValue(info.duration)} />
                                 </GridItem>
                                 <GridItem w="100%" gap={4} whiteSpace="nowrap" overflow="hidden">
                                     <Card label="Commit" value={info.commitSha ?? 'N/A'} ellipseValue copyable />

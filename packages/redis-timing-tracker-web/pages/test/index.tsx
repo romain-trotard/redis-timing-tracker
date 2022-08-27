@@ -9,6 +9,7 @@ import Card from '../../components/Card'
 import { getDisplayDateTime } from '../../utils/date'
 import EmptyState from '../../components/EmptyState'
 import siteUrl from '../../utils/siteUrl'
+import { getHumanDurationValue } from '../../utils/time'
 
 
 const Chart = dynamic(() => import('../../components/Chart'), { ssr: false })
@@ -115,7 +116,7 @@ const Content: NextPage<{ data: TimeSeriesEntry[]; initValue: { value: string; l
                                         <Card label="Run at" value={getDisplayDateTime(info.startTimestamp)} />
                                     </GridItem>
                                     <GridItem w="100%" gap={4}>
-                                        <Card label="Duration" value={`${info.duration}ms`} />
+                                        <Card label="Duration" value={getHumanDurationValue(info.duration)} />
                                     </GridItem>
                                     <GridItem w="100%" gap={4} whiteSpace="nowrap" overflow="hidden">
                                         <Card label="Commit" value={info.commitSha ?? 'N/A'} ellipseValue copyable />

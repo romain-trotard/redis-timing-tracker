@@ -1,5 +1,6 @@
 import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from "recharts";
 import { getDisplayDateTime } from "../utils/date";
+import { getHumanDurationValue } from "../utils/time";
 
 export default function Chart({ data, width, height, onValueClick }: { width?: number; height?: number; data: { timestamp: number; value: number; }[]; onValueClick?: (startTimestamp: string) => void; }) {
     return (
@@ -11,7 +12,7 @@ export default function Chart({ data, width, height, onValueClick }: { width?: n
             }
         }}>
             <Tooltip labelFormatter={(value: number) => `Started : ${getDisplayDateTime(value)}`}
-                formatter={(value: number) => [`${value}ms`, 'Duration:']} />
+                formatter={(value: number) => [getHumanDurationValue(value), 'Duration:']} />
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="timestamp" label="Started at" tickFormatter={() => ''} />
             <YAxis domain={['auto', 'auto']} label={{ value: 'Duration', angle: -90, position: 'insideLeft' }} />
