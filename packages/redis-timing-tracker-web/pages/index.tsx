@@ -69,7 +69,7 @@ const Home: NextPage<Props> = ({ fullTestData, latestRunInfo, siteUrl }) => {
                             <Card label="Number of tests" value={latestRunInfo === null ? 'N/A' : latestRunInfo.numberOfTests} />
                         </GridItem>
                         <GridItem w="100%" gap={4}>
-                            <Card label="Average time by test" value={latestRunInfo === null ? 'N/A' : `${latestRunInfo.duration / latestRunInfo.numberOfTests}ms`} />
+                            <Card label="Average time by test" value={latestRunInfo === null ? 'N/A' : `${(latestRunInfo.duration / latestRunInfo.numberOfTests).toFixed(2)}ms`} />
                         </GridItem>
                     </Grid>
                     <Box h="100%" w="100%" borderWidth="1px" borderRadius="lg" padding={5} boxShadow="base">
