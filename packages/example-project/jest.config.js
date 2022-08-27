@@ -1,5 +1,5 @@
 const config = {
-    reporters: ['redis-timing-tracker']
+    reporters: ['default', 'redis-timing-tracker']
 }
 
 export default config;
