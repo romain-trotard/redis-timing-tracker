@@ -4,9 +4,7 @@ describe('Arrays', () => {
 
     describe('first', () => {
 
-        test('should get the first element if non empty', async () => {
-            await new Promise(resolve => setTimeout(resolve, 500));
-
+        test('should get the first element if non empty', () => {
             expect(_.first([1, 2, 3, 4])).toBe(1);
         });
 
