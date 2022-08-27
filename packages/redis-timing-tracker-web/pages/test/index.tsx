@@ -21,17 +21,18 @@ type TimeSeriesEntry = {
 type Props = {
     data: TimeSeriesEntry[] | null;
     initValue: { value: string; label: string; } | null;
+    siteUrl: string;
 };
 
-const ByTestPage: NextPage<Props> = ({ data, initValue }) => {
+const ByTestPage: NextPage<Props> = ({ data, initValue, siteUrl }) => {
     if (data === null || initValue === null) {
         return <EmptyState />
     }
 
-    return <Content data={data} initValue={initValue} />
+    return <Content data={data} initValue={initValue} siteUrl={siteUrl} />
 }
 
-const Content: NextPage<{ data: TimeSeriesEntry[]; initValue: { value: string; label: string; } }> = ({ data, initValue }) => {
+const Content: NextPage<{ data: TimeSeriesEntry[]; initValue: { value: string; label: string; }; siteUrl: string; }> = ({ data, initValue, siteUrl }) => {
     const [chartData, setChartData] = useState(data);
     const [value, setValue] = useState<NonNullable<SingleValue<{ value: string; label: string; }>>>(initValue);
     const [info, setInfo] = useState<{ startTimestamp: number; commitSha: string | null; duration: number; }>();
@@ -206,6 +207,9 @@ export async function getServerSideProps() {
         props: {
             data,
             initValue,
+            // Pass siteUrl not to have pb with env variable
+            // Could be done with the PUBLIC env variable but it's easier like this
+            siteUrl,
         }
     }
 }

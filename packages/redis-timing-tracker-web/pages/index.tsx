@@ -22,9 +22,10 @@ type LatestRunInfo = { startTimestamp: number; duration: number; numberOfTests: 
 type Props = {
     fullTestData: TimeSeriesEntry[] | null;
     latestRunInfo: LatestRunInfo | null
+    siteUrl: string;
 };
 
-const Home: NextPage<Props> = ({ fullTestData, latestRunInfo }) => {
+const Home: NextPage<Props> = ({ fullTestData, latestRunInfo, siteUrl }) => {
     const [info, setInfo] = useState<{ startTimestamp: number; commitSha: string | null; duration: number; numberOfTests: number; }>();
     const [data, setData] = useState(fullTestData ?? []);
     const initialFocusRef = useRef<HTMLButtonElement | null>(null);
@@ -172,6 +173,9 @@ export async function getServerSideProps() {
         props: {
             fullTestData,
             latestRunInfo,
+            // Pass siteUrl not to have pb with env variable
+            // Could be done with the PUBLIC env variable but it's easier like this
+            siteUrl,
         }
     }
 }
