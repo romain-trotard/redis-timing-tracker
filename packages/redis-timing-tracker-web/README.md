@@ -4,7 +4,7 @@ Application to display data tracked by the `redis-timing-tracker` package.
 
 ## Prerequisites
 
-- Node.js v16 or later
+- Node.js v16.6.0 or later
 - Docker - v20.10.17
 
 You need to configure the environment variable for the Redis connection: 

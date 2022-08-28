@@ -410,7 +410,7 @@ TS.DEL fullTestTimeSeriesKey 1661537625987 1661537625987
 
 ### Prerequisites
 
-- Node.js v16 or later
+- Node.js v16.6.0 or later
 - Docker - v20.10.17
 
 ### Local installation
