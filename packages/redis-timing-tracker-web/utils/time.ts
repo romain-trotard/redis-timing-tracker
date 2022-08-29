@@ -10,6 +10,12 @@ export function getHumanDurationValue(milliseconds: number) {
     const ms = Duration.fromObject({ seconds: seconds - realSeconds }).as('milliseconds');
     const realMs = Math.trunc(ms);
 
+    if (realMinutes === 0 && realSeconds === 0) {
+        return Duration.fromObject({
+            milliseconds: realMs,
+        }).toHuman({ unitDisplay: 'short' });
+    }
+
     return Duration.fromObject({
         minutes: realMinutes === 0 ? undefined : realMinutes,
         seconds: realSeconds === 0 ? undefined : realSeconds,
