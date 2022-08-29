@@ -12,6 +12,8 @@ your tests.
 
 The Back Office is deployed here: https://redis-timing-tracker.vercel.app/
 
+> **Note:** For now, it doesn't persist data of a test in error, and if there is an error it doesn't persist the full execution duration.
+
 
 ## How it works
 
