@@ -7,9 +7,13 @@ Track the timing of your jest tests to follow the evolution of time passed for e
 This way you can know when a change in your configuration, a library upgrade or a change in your test, increased drastically the time passed on
 your tests.
 
-<u>All test page overview</u>
+<ins>All test page overview</ins>
 
 ![All test page overview](https://raw.githubusercontent.com/romain-trotard/redis-timing-tracker/main/docs/allTestPageOverview.png)
+
+<ins>Single test page overview</ins>
+
+![Single test page overview](https://raw.githubusercontent.com/romain-trotard/redis-timing-tracker/main/docs/singleTestPageOverview.png)
 
 
 The Back Office is deployed here: https://redis-timing-tracker.vercel.app/
