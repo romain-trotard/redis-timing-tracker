@@ -11,11 +11,12 @@
     "quick_deploy": "false",
     "deploy_buttons": [],
     "language": ["JavaScript"],
-    "redis_commands": ["TS.CREATE", "TS.ADD", "JSON.SET", "FT.CREATE", "FT.SEARCH", "TS.INFO", "TS.RANGE", "JSON.GET"],
+    "redis_commands": ["TS.CREATE", "TS.ADD", "TS.DEL", "FT.CREATE", "FT.SEARCH", "TS.INFO", "TS.RANGE", "JSON.SET", "JSON.GET", "JSON.DEL"],
     "redis_features": [],
     "redis_modules": ["RedisJSON", "RediSearch", "RedisTimeseries"],
     "app_image_urls": [
-        "TODO rtr"
+        "https://github.com/romain-trotard/redis-timing-tracker/docs/allTestPageOverview.png",
+        "https://github.com/romain-trotard/redis-timing-tracker/docs/singleTestPageOverview.png"
     ],
     "youtube_url": "",
     "special_tags": ["Hackathon"],

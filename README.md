@@ -7,6 +7,8 @@ Track the timing of your jest tests to follow the evolution of time passed for e
 This way you can know when a change in your configuration, a library upgrade or a change in your test, increased drastically the time passed on
 your tests.
 
+![All test page overview](./docs/allTestPageOverview.png)
+
 
 ## How it works
 
