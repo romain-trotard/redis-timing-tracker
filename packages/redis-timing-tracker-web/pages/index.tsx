@@ -1,7 +1,7 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import dynamic from 'next/dynamic'
-import { Alert, AlertIcon, Box, Button, ButtonGroup, Center, Container, Flex, Grid, GridItem, Heading, Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverFooter, PopoverHeader, PopoverTrigger, Tooltip } from '@chakra-ui/react'
+import { Alert, AlertIcon, Box, Button, ButtonGroup, Center, Container, Flex, Grid, GridItem, Heading, Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverFooter, PopoverHeader, PopoverTrigger, Tooltip, useToast } from '@chakra-ui/react'
 import Card from '../components/Card'
 import { ResponsiveContainer } from 'recharts'
 import EmptyState from '../components/EmptyState'
@@ -30,6 +30,7 @@ const Home: NextPage<Props> = ({ fullTestData, latestRunInfo, siteUrl }) => {
     const [info, setInfo] = useState<{ startTimestamp: number; commitSha: string | null; duration: number; numberOfTests: number; }>();
     const [data, setData] = useState(fullTestData ?? []);
     const initialFocusRef = useRef<HTMLButtonElement | null>(null);
+    const showToast = useToast();
 
     if (latestRunInfo === null || fullTestData === null) {
         return <EmptyState />
@@ -49,7 +50,13 @@ const Home: NextPage<Props> = ({ fullTestData, latestRunInfo, siteUrl }) => {
         const url = new URL(`${siteUrl}/api/test/full/timing`)
         url.searchParams.append('timestamp', timestamp.toString());
 
-        await fetch(url, { method: 'DELETE' });
+        try {
+            await fetch(url, { method: 'DELETE' });
+
+            showToast({ title: 'The value has been deleted', status: 'success' });
+        } catch (e) {
+            showToast({ title: 'Error when deleting the value', status: 'error' });
+        }
     }
 
     return (
