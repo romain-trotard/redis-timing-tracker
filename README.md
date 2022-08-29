@@ -424,9 +424,9 @@ docker compose up -d
 ```
 
 > **Note:** If you use your own redis configuration you can change the `.env` settings:
-- `REDIS_HOST`: the hostname of the redis server
-- `REDIS_PORT`: the port of the redis server
-- `REDIS_PASSWORD`: the ACL password to connect to the redis server
+> - `REDIS_HOST`: the hostname of the redis server
+> - `REDIS_PORT`: the port of the redis server
+> - `REDIS_PASSWORD`: the ACL password to connect to the redis server
 
 - Install dependencies
 
