@@ -10,6 +10,9 @@ your tests.
 ![All test page overview](./docs/allTestPageOverview.png)
 
 
+The Back Office is deployed here: https://redis-timing-tracker.vercel.app/
+
+
 ## How it works
 
 Here is little achitecture diagram:
